@@ -1,0 +1,17 @@
+name: Renombrar carta a index
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  renombrar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Renombrar archivo
+        run: |
+          git mv anita-broaster-carta-qr.html index.html
+          git config user.name "precuenta44-glitch"
+          git config user.email "precuenta44-glitch@users.noreply.github.com"
+          git commit -m "Rename anita-broaster-carta-qr.html to index.html"
+          git push
