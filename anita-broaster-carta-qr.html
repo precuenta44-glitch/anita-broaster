@@ -114,7 +114,7 @@ a.wa{color:var(--green);font-weight:800}
     <p class="lead">Escaneaste el QR y llegaste a nuestra carta. Elige tu plato, tus cremas y las opciones que lleva — con o sin ensalada y con o sin arroz, según el plato — y pide directo por WhatsApp.</p>
     <div class="badges">
       <span class="pill"><span class="dot"></span> Carta de hoy</span>
-      <span class="pill">🛵 Delivery: El Carmen S/ 2 · Pasando Belaunde S/ 3</span>
+      <span class="pill">🛵 Delivery: El Carmen S/ 2 · Otras zonas a cotizar</span>
       <span class="pill">WhatsApp 974 953 476</span>
     </div>
   </div>
@@ -149,9 +149,9 @@ a.wa{color:var(--green);font-weight:800}
       <label class="f">¿A qué zona va tu delivery?</label>
       <div class="seg" id="zoneSeg">
         <button type="button" data-z="carmen" class="on">Todo El Carmen<small>+ S/ 2.00</small></button>
-        <button type="button" data-z="belaunde">Más arriba / pasando Belaunde<small>+ S/ 3.00</small></button>
+        <button type="button" data-z="otras">Otras zonas<small>a cotizar</small></button>
       </div>
-      <p class="feeNote">El costo del delivery se suma a tu total según la zona que elijas.</p>
+      <p class="feeNote">En El Carmen el delivery se suma a tu total. Para otras zonas, el costo del delivery se cotiza por WhatsApp antes de preparar tu pedido.</p>
     </div>
     <label class="f" for="custExtra" id="extraLabel">Número de mesa (si estás en el local)</label>
     <input type="text" id="custExtra" placeholder="Ej. Mesa 4 / o tu dirección si es delivery"/>
@@ -227,7 +227,7 @@ var LOCAL_DRINKS=[
 ];
 var ZONES={
 carmen:{label:"Todo El Carmen",fee:2},
-belaunde:{label:"Más arriba / pasando Belaunde",fee:3}
+otras:{label:"Otras zonas",fee:null}
 };
 var menu=LOCAL_MENU.slice(),drinks=LOCAL_DRINKS.slice(),cart=[];
 var MODS=null;
@@ -319,7 +319,8 @@ document.getElementById("extraLabel").textContent=v==="Delivery"?"Dirección de 
 renderCart();
 });
 segWire("zoneSeg",function(z){zone=z;renderCart()},"data-z");
-function deliveryFee(){return fulfill==="Delivery"?ZONES[zone].fee:0}
+function deliveryFee(){return fulfill==="Delivery"?(ZONES[zone].fee||0):0}
+function deliveryQuote(){return fulfill==="Delivery"&&ZONES[zone].fee==null}
 function cartSubtotal(){return cart.reduce(function(s,i){return s+i.price*i.qty},0)}
 function cartTotal(){return cartSubtotal()+deliveryFee()}
 function itemDetail(i){
@@ -353,13 +354,17 @@ if(fee>0){
 feeRow.style.display="flex";
 document.getElementById("feeLabel").textContent="Delivery — "+ZONES[zone].label;
 document.getElementById("feeVal").textContent="+ "+money(fee);
+}else if(deliveryQuote()){
+feeRow.style.display="flex";
+document.getElementById("feeLabel").textContent="Delivery — "+ZONES[zone].label;
+document.getElementById("feeVal").textContent="a cotizar";
 }else{feeRow.style.display="none"}
 document.getElementById("cartTotal").textContent=money(t);
 document.getElementById("sendBtn").disabled=!cart.length;
 var bar=document.getElementById("cartBar");
 bar.style.display=cart.length?"block":"none";
 document.getElementById("barTotal").textContent=money(t);
-document.getElementById("barCount").textContent=n+(n===1?" producto":" productos")+(fee>0?" · incl. delivery "+money(fee):"");
+document.getElementById("barCount").textContent=n+(n===1?" producto":" productos")+(fee>0?" · incl. delivery "+money(fee):(deliveryQuote()?" · delivery a cotizar":""));
 }
 document.getElementById("barGo").addEventListener("click",function(){document.getElementById("cartTitle").scrollIntoView({behavior:"smooth"})});
 document.getElementById("sendBtn").addEventListener("click",function(){
@@ -369,7 +374,7 @@ var note=document.getElementById("custNote").value.trim();
 var lines=["🍗 *PEDIDO — ANITA BROASTER*"];
 if(name)lines.push("Cliente: "+name);
 lines.push("Modalidad: "+fulfill+(extra?" — "+extra:""));
-if(fulfill==="Delivery")lines.push("Zona de delivery: "+ZONES[zone].label+" ("+money(ZONES[zone].fee)+")");
+if(fulfill==="Delivery")lines.push("Zona de delivery: "+ZONES[zone].label+(ZONES[zone].fee!=null?" ("+money(ZONES[zone].fee)+")":" (a cotizar)"));
 lines.push("------------------------");
 var hasAsk=false;
 cart.forEach(function(i){
@@ -379,8 +384,12 @@ if(i.price<=0)hasAsk=true;
 });
 lines.push("------------------------");
 lines.push("Subtotal: "+money(cartSubtotal()));
-if(fulfill==="Delivery")lines.push("Delivery ("+ZONES[zone].label+"): "+money(deliveryFee()));
+if(fulfill==="Delivery"){
+if(deliveryQuote()){lines.push("Delivery ("+ZONES[zone].label+"): a cotizar")}
+else{lines.push("Delivery ("+ZONES[zone].label+"): "+money(deliveryFee()))}
+}
 lines.push("*TOTAL: "+money(cartTotal())+"*");
+if(deliveryQuote())lines.push("Nota: el total no incluye el delivery; el costo para otras zonas se cotiza por WhatsApp.");
 if(hasAsk)lines.push("Nota: algunas bebidas tienen precio a confirmar.");
 if(note)lines.push("Nota: "+note);
 var notice=document.getElementById("orderNotice");
@@ -456,7 +465,7 @@ var totalCents=subCents+feeCents;
 var orderType=fulfill==="Delivery"?"delivery":(fulfill==="Para llevar"?"pickup":"mesa");
 var code="QR-"+Date.now().toString().slice(-6);
 var snapshot=cart.slice();
-var address=orderType==="delivery"?((extra||"")+(extra?" · ":"")+"Zona: "+ZONES[zone].label+" (delivery "+money(ZONES[zone].fee)+")"):"";
+var address=orderType==="delivery"?((extra||"")+(extra?" · ":"")+"Zona: "+ZONES[zone].label+" (delivery "+(ZONES[zone].fee!=null?money(ZONES[zone].fee):"a cotizar")+")"):"";
 fetch(SUPA_URL+"/rest/v1/orders",{
 method:"POST",
 headers:supaHeaders({"Content-Type":"application/json","Prefer":"return=representation"}),
