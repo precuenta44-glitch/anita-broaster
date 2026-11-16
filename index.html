@@ -50,6 +50,8 @@ h2.sec::after{content:"";flex:1;height:3px;border-radius:2px;background:linear-g
 .card .desc{color:var(--muted);font-size:14px;margin:0;flex:1;line-height:1.45}
 .tags{display:flex;gap:6px;flex-wrap:wrap}
 .tags span{font-size:12px;font-weight:700;background:var(--chip);border:1px solid var(--line);padding:5px 9px;border-radius:999px}
+.tags span.stock{background:var(--green-bg);color:var(--green);border-color:transparent}
+.tags span.stock.low{background:var(--red-bg);color:#B3261E}
 .btn{border:0;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;padding:12px 16px;background:var(--brand);color:#fff;width:100%}
 .btn:active{transform:scale(.98)}
 .btn[disabled]{background:#9a8d84;cursor:not-allowed}
@@ -201,6 +203,7 @@ a.wa{color:var(--green);font-weight:800}
       <button id="qMinus" aria-label="Menos">−</button><b id="qVal">1</b><button id="qPlus" aria-label="Más">+</button>
       <span style="color:var(--muted);font-size:14px">cantidad</span>
     </div>
+    <p class="feeNote" id="mStock" style="display:none"></p>
     <div style="height:16px"></div>
     <button class="btn" id="mAdd">Agregar al pedido</button>
     <button class="btn ghost" id="mClose" style="margin-top:8px">Cancelar</button>
@@ -232,19 +235,23 @@ var menu=LOCAL_MENU.slice(),drinks=LOCAL_DRINKS.slice(),cart=[];
 var MODS=null;
 function dishCreams(it){return it.creams?it.creams:CREAMS}
 function dishSaladMode(it){return it.saladMode||"choice"}
+function itemStock(it){return (it.stock===undefined||it.stock===null)?null:Number(it.stock)}
+function soldOut(it){return !it.available||itemStock(it)===0}
+function stockTag(it){var s=itemStock(it);if(s===null||!it.available)return "";return '<span class="stock'+(s<=5?" low":"")+'">Quedan '+s+"</span>"}
 function money(n){return "S/ "+Number(n).toFixed(2)}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function renderMenu(){
 var g=document.getElementById("menuGrid");g.innerHTML="";
 menu.forEach(function(it,idx){
-var card=document.createElement("article");card.className="card"+(it.available?"":" out");
+var out=soldOut(it);
+var card=document.createElement("article");card.className="card"+(out?" out":"");
 var tg=[],dc=dishCreams(it),sm=dishSaladMode(it);
 if(dc.length)tg.push(dc.length+" cremas a elegir");
 if(sm==="choice")tg.push("Con / sin ensalada");
 else if(sm==="papas")tg.push("Solo papas");
 if(it.hasRice)tg.push("Con / sin arroz");
-var tagsHtml=tg.map(function(t){return "<span>"+t+"</span>"}).join("");
-card.innerHTML='<div class="ph"><img src="'+esc(it.img)+'" alt="'+esc(it.name)+'" loading="lazy" onerror="this.style.display=\'none\'"/><span class="badge '+(it.available?"ok":"no")+'">'+(it.available?"DISPONIBLE":"AGOTADO")+'</span><span class="priceTag">'+money(it.price)+'</span></div><div class="body"><h3>'+esc(it.name)+'</h3><p class="desc">'+esc(it.desc||"")+'</p><div class="tags">'+tagsHtml+'</div><button class="btn" data-add="'+idx+'" '+(it.available?"":"disabled")+'>'+(it.available?"Personalizar y agregar":"Agotado por hoy")+'</button></div>';
+var tagsHtml=tg.map(function(t){return "<span>"+t+"</span>"}).join("")+stockTag(it);
+card.innerHTML='<div class="ph"><img src="'+esc(it.img)+'" alt="'+esc(it.name)+'" loading="lazy" onerror="this.style.display=\'none\'"/><span class="badge '+(out?"no":"ok")+'">'+(out?"AGOTADO":"DISPONIBLE")+'</span><span class="priceTag">'+money(it.price)+'</span></div><div class="body"><h3>'+esc(it.name)+'</h3><p class="desc">'+esc(it.desc||"")+'</p><div class="tags">'+tagsHtml+'</div><button class="btn" data-add="'+idx+'" '+(out?"disabled":"")+'>'+(out?"Agotado por hoy":"Personalizar y agregar")+'</button></div>';
 g.appendChild(card);
 });
 g.querySelectorAll("[data-add]").forEach(function(b){b.addEventListener("click",function(){openModal(menu[Number(b.getAttribute("data-add"))])})});
@@ -252,17 +259,24 @@ g.querySelectorAll("[data-add]").forEach(function(b){b.addEventListener("click",
 function renderDrinks(){
 var g=document.getElementById("drinkGrid");g.innerHTML="";
 drinks.forEach(function(it,idx){
-var card=document.createElement("article");card.className="card drink"+(it.available?"":" out");
+var out=soldOut(it);
+var card=document.createElement("article");card.className="card drink"+(out?" out":"");
 var tag=it.price>0?'<span class="priceTag">'+money(it.price)+'</span>':'<span class="priceTag ask">Precio por WhatsApp</span>';
-card.innerHTML='<div class="ph"><img src="'+esc(it.img)+'" alt="'+esc(it.name)+'" loading="lazy" onerror="this.style.display=\'none\'"/><span class="badge '+(it.available?"ok":"no")+'">'+(it.available?"DISPONIBLE":"AGOTADO")+'</span>'+tag+'</div><div class="body"><h3>'+esc(it.name)+'</h3><p class="desc">'+esc(it.desc||"")+'</p><button class="btn" data-drink="'+idx+'" '+(it.available?"":"disabled")+'>'+(it.available?"Agregar al pedido":"Agotado por hoy")+'</button></div>';
+var st=stockTag(it);
+card.innerHTML='<div class="ph"><img src="'+esc(it.img)+'" alt="'+esc(it.name)+'" loading="lazy" onerror="this.style.display=\'none\'"/><span class="badge '+(out?"no":"ok")+'">'+(out?"AGOTADO":"DISPONIBLE")+'</span>'+tag+'</div><div class="body"><h3>'+esc(it.name)+'</h3><p class="desc">'+esc(it.desc||"")+'</p>'+(st?'<div class="tags">'+st+'</div>':"")+'<button class="btn" data-drink="'+idx+'" '+(out?"disabled":"")+'>'+(out?"Agotado por hoy":"Agregar al pedido")+'</button></div>';
 g.appendChild(card);
 });
 g.querySelectorAll("[data-drink]").forEach(function(b){b.addEventListener("click",function(){addDrink(drinks[Number(b.getAttribute("data-drink"))],b)})});
 }
 function addDrink(it,btn){
+if(soldOut(it))return;
 var found=null;
 cart.forEach(function(i){if(i.drink&&i.name===it.name)found=i});
-if(found){found.qty++}else{cart.push({productId:it.id||null,name:it.name,price:it.price,qty:1,drink:true,creams:[],salad:"",rice:null,note:""})}
+if(found){
+var s=itemStock(it);
+if(s!==null&&found.qty>=s){if(btn){var o2=btn.textContent;btn.textContent="No quedan más";setTimeout(function(){btn.textContent=o2},1200)}return}
+found.qty++;
+}else{cart.push({productId:it.id||null,name:it.name,price:it.price,qty:1,drink:true,creams:[],salad:"",rice:null,note:""})}
 renderCart();
 if(btn){var old=btn.textContent;btn.textContent="✓ Agregado";setTimeout(function(){btn.textContent=old},1200)}
 }
@@ -283,6 +297,8 @@ document.getElementById("mName").textContent=item.name;
 document.getElementById("mPrice").textContent=money(item.price);
 document.getElementById("qVal").textContent="1";
 document.getElementById("mNote").value="";
+var stEl=document.getElementById("mStock"),stN=itemStock(item);
+if(stN!==null){stEl.style.display="block";stEl.textContent="Quedan "+stN+(stN===1?" unidad":" unidades")+" de este plato hoy."}else{stEl.style.display="none"}
 document.getElementById("riceBlock").style.display=item.hasRice?"block":"none";
 document.getElementById("saladBlock").style.display=sm==="choice"?"block":"none";
 document.getElementById("papasNote").style.display=sm==="papas"?"block":"none";
@@ -299,7 +315,7 @@ document.getElementById("modal").classList.add("open");
 }
 function updateAddBtn(){if(cur)document.getElementById("mAdd").textContent="Agregar "+curQty+" · "+money(cur.price*curQty)}
 document.getElementById("qMinus").addEventListener("click",function(){if(curQty>1)curQty--;document.getElementById("qVal").textContent=curQty;updateAddBtn()});
-document.getElementById("qPlus").addEventListener("click",function(){if(curQty<30)curQty++;document.getElementById("qVal").textContent=curQty;updateAddBtn()});
+document.getElementById("qPlus").addEventListener("click",function(){var mx=cur&&itemStock(cur)!==null?itemStock(cur):30;if(curQty<mx)curQty++;document.getElementById("qVal").textContent=curQty;updateAddBtn()});
 segWire("mSalad",function(v){curSalad=v});
 segWire("mRice",function(v){curRice=v});
 document.getElementById("mClose").addEventListener("click",function(){document.getElementById("modal").classList.remove("open")});
@@ -434,7 +450,7 @@ creams=CREAMS.filter(function(c){return names.indexOf(c)>=0});
 hasRice=names.indexOf("Con arroz")>=0;
 saladMode=names.indexOf("Solo papas")>=0?"papas":(names.indexOf("Con ensalada")>=0?"choice":"none");
 }
-return{id:r.id||null,slug:local?local.slug:"",name:r.name||(local?local.name:"Plato"),price:price,img:img,desc:r.description||(local?local.desc:""),hasRice:hasRice,available:(r.available!=null?!!r.available:true),sortOrder:r.sort_order!=null?Number(r.sort_order):99,creams:creams,saladMode:saladMode};
+return{id:r.id||null,slug:local?local.slug:"",name:r.name||(local?local.name:"Plato"),price:price,img:img,desc:r.description||(local?local.desc:""),hasRice:hasRice,available:(r.available!=null?!!r.available:true),stock:(r.stock_quantity===undefined||r.stock_quantity===null)?null:Number(r.stock_quantity),sortOrder:r.sort_order!=null?Number(r.sort_order):99,creams:creams,saladMode:saladMode};
 }
 var fetchBusy=false,failCount=0;
 function fetchMenu(){
