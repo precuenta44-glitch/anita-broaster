@@ -1,0 +1,20 @@
+name: Reemplazar index temporal
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  reemplazar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reemplazar index.html
+        run: |
+          rm -f index.html
+          mv anita-broaster-carta-qr.html index.html
+          ls -lh index.html
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Reemplazar index.html con la nueva carta QR con stock"
+          git push
