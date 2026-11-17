@@ -1,0 +1,22 @@
+name: Rename carta to index
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rename:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rename carta file to index.html
+        run: mv anita-broaster-carta-qr.html index.html
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Rename anita-broaster-carta-qr.html to index.html" || echo "No changes to commit"
+          git push
