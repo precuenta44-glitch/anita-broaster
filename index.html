@@ -49,13 +49,15 @@ h3.cat::after{content:"";flex:1;height:3px;border-radius:2px;background:linear-g
 .badge.no{background:#B3261E;color:#fff}
 .priceTag{position:absolute;bottom:10px;right:10px;background:#1C1410;color:#FFD9A0;font-weight:800;font-size:19px;padding:7px 12px;border-radius:12px}
 .priceTag.ask{background:var(--brand-dark);color:#FFE9D6;font-size:14px}
+.stockTag{position:absolute;bottom:10px;left:10px;background:var(--green-bg);color:var(--green);font-size:12px;font-weight:800;padding:6px 10px;border-radius:999px}
+.stockTag.low{background:#B3261E;color:#fff}
+.mStock{color:var(--muted);font-weight:700;font-size:14px;margin:6px 0 0}
+.mStock.low{color:#B3261E}
 .card .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
 .card h3{margin:0;font-size:20px;font-weight:800}
 .card .desc{color:var(--muted);font-size:14px;margin:0;flex:1;line-height:1.45}
 .tags{display:flex;gap:6px;flex-wrap:wrap}
 .tags span{font-size:12px;font-weight:700;background:var(--chip);border:1px solid var(--line);padding:5px 9px;border-radius:999px}
-.tags span.stock{background:var(--green-bg);color:var(--green);border-color:transparent}
-.tags span.stock.low{background:var(--red-bg);color:#B3261E}
 .btn{border:0;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;padding:12px 16px;background:var(--brand);color:#fff;width:100%}
 .btn:active{transform:scale(.98)}
 .btn[disabled]{background:#9a8d84;cursor:not-allowed}
@@ -113,6 +115,12 @@ label.f{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}
 .qrShare p{font-weight:900;font-size:16px;line-height:1.5;letter-spacing:.4px;margin:0 0 14px}
 .qrShare img{width:min(240px,70vw);height:auto;margin:0 auto 14px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:8px}
 .qrShare .btn{max-width:320px;margin:0 auto}
+.shareLink{display:flex;gap:8px;align-items:stretch;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.shareLink .url{flex:1;min-width:200px;max-width:340px;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;color:var(--ink);word-break:break-all;line-height:1.4}
+.shareLink .btn{width:auto;margin:0}
+.shareBtnRow{margin-top:10px}
+.shareBtnRow .btn{max-width:320px}
+.qrShare .notice{max-width:420px;margin-left:auto;margin-right:auto}
 footer{color:var(--muted);font-size:13px;text-align:center;margin-top:34px;line-height:1.6}
 a.wa{color:var(--green);font-weight:800}
 </style>
@@ -186,6 +194,14 @@ a.wa{color:var(--green);font-weight:800}
       <p>POR FAVOR, NOS AYUDARÍA COMPARTIENDO EL QR DE LA CARTA CON SUS AMISTADES</p>
       <img id="qrImg" src="https://precuenta44-glitch.github.io/anita-broaster/qr.png" alt="Código QR de la carta de ANITA BROASTER" loading="lazy"/>
       <button class="btn" id="qrDownload" type="button">⬇️ Descargar QR</button>
+      <div class="shareLink">
+        <span class="url">https://precuenta44-glitch.github.io/anita-broaster/</span>
+        <button class="btn ghost small" id="copyLinkBtn" type="button">📋 Copiar enlace</button>
+      </div>
+      <div class="shareBtnRow">
+        <button class="btn green" id="shareBtn" type="button">📤 Compartir</button>
+      </div>
+      <div class="notice" id="shareNotice" role="status"></div>
     </div>
   </div>
   <footer>
@@ -203,6 +219,7 @@ a.wa{color:var(--green);font-weight:800}
   <div class="sheet">
     <h3 id="mName">Plato</h3>
     <div class="p" id="mPrice">S/ 0.00</div>
+    <p class="mStock" id="mStock" style="display:none"></p>
     <div id="creamsBlock">
       <div class="optTitle">Cremas <small>— elige todas las que quieras, o ninguna</small></div>
       <div class="chips" id="mCreams"></div>
@@ -228,7 +245,6 @@ a.wa{color:var(--green);font-weight:800}
       <button id="qMinus" aria-label="Menos">−</button><b id="qVal">1</b><button id="qPlus" aria-label="Más">+</button>
       <span style="color:var(--muted);font-size:14px">cantidad</span>
     </div>
-    <p class="feeNote" id="mStock" style="display:none"></p>
     <div style="height:16px"></div>
     <button class="btn" id="mAdd">Agregar al pedido</button>
     <button class="btn ghost" id="mClose" style="margin-top:8px">Cancelar</button>
@@ -266,8 +282,13 @@ var payMethod="efectivo";
 function dishCreams(it){return it.creams?it.creams:CREAMS}
 function dishSaladMode(it){return it.saladMode||"choice"}
 function itemStock(it){return (it.stock===undefined||it.stock===null)?null:Number(it.stock)}
+function stockTag(it){
+if(isClosed())return "";
+var s=itemStock(it);
+if(s===null||s<=0)return "";
+return '<span class="stockTag'+(s<=3?" low":"")+'">Quedan '+s+"</span>";
+}
 function soldOut(it){return isClosed()||!it.available||itemStock(it)===0}
-function stockTag(it){var s=itemStock(it);if(s===null||!it.available)return "";return '<span class="stock'+(s<=5?" low":"")+'">Quedan '+s+"</span>"}
 function money(n){return "S/ "+Number(n).toFixed(2)}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function categoryOf(it){var c=it&&it.category?String(it.category).trim():"";return c||"Platos"}
@@ -295,10 +316,10 @@ if(dc.length)tg.push(dc.length+" cremas a elegir");
 if(sm==="choice")tg.push("Con / sin ensalada");
 else if(sm==="papas")tg.push("Solo papas");
 if(it.hasRice)tg.push("Con / sin arroz");
-var tagsHtml=tg.map(function(t){return "<span>"+t+"</span>"}).join("")+stockTag(it);
+var tagsHtml=tg.map(function(t){return "<span>"+t+"</span>"}).join("");
 var badgeTxt=isClosed()?"NO DISPONIBLE":(out?"AGOTADO":"DISPONIBLE");
 var btnTxt=isClosed()?"Cerrado por hoy":(out?"Agotado por hoy":"Personalizar y agregar");
-card.innerHTML='<div class="ph"><img src="'+esc(it.img)+'" alt="'+esc(it.name)+'" loading="lazy" onerror="this.style.display=\'none\'"/><span class="badge '+(out?"no":"ok")+'">'+badgeTxt+'</span><span class="priceTag">'+money(it.price)+'</span></div><div class="body"><h3>'+esc(it.name)+'</h3><p class="desc">'+esc(it.desc||"")+'</p><div class="tags">'+tagsHtml+'</div><button class="btn" data-add="'+idx+'" '+(out?"disabled":"")+'>'+btnTxt+'</button></div>';
+card.innerHTML='<div class="ph"><img src="'+esc(it.img)+'" alt="'+esc(it.name)+'" loading="lazy" onerror="this.style.display=\'none\'"/><span class="badge '+(out?"no":"ok")+'">'+badgeTxt+'</span>'+stockTag(it)+'<span class="priceTag">'+money(it.price)+'</span></div><div class="body"><h3>'+esc(it.name)+'</h3><p class="desc">'+esc(it.desc||"")+'</p><div class="tags">'+tagsHtml+'</div><button class="btn" data-add="'+idx+'" '+(out?"disabled":"")+'>'+btnTxt+'</button></div>';
 grid.appendChild(card);
 });
 sec.appendChild(grid);
@@ -312,10 +333,9 @@ drinks.forEach(function(it,idx){
 var out=soldOut(it);
 var card=document.createElement("article");card.className="card drink"+(out?" out":"");
 var tag=it.price>0?'<span class="priceTag">'+money(it.price)+'</span>':'<span class="priceTag ask">Precio por WhatsApp</span>';
-var st=stockTag(it);
 var dBadge=isClosed()?"NO DISPONIBLE":(out?"AGOTADO":"DISPONIBLE");
 var dBtn=isClosed()?"Cerrado por hoy":(out?"Agotado por hoy":"Agregar al pedido");
-card.innerHTML='<div class="ph"><img src="'+esc(it.img)+'" alt="'+esc(it.name)+'" loading="lazy" onerror="this.style.display=\'none\'"/><span class="badge '+(out?"no":"ok")+'">'+dBadge+'</span>'+tag+'</div><div class="body"><h3>'+esc(it.name)+'</h3><p class="desc">'+esc(it.desc||"")+'</p>'+(st?'<div class="tags">'+st+'</div>':"")+'<button class="btn" data-drink="'+idx+'" '+(out?"disabled":"")+'>'+dBtn+'</button></div>';
+card.innerHTML='<div class="ph"><img src="'+esc(it.img)+'" alt="'+esc(it.name)+'" loading="lazy" onerror="this.style.display=\'none\'"/><span class="badge '+(out?"no":"ok")+'">'+dBadge+'</span>'+stockTag(it)+tag+'</div><div class="body"><h3>'+esc(it.name)+'</h3><p class="desc">'+esc(it.desc||"")+'</p><button class="btn" data-drink="'+idx+'" '+(out?"disabled":"")+'>'+dBtn+'</button></div>';
 g.appendChild(card);
 });
 g.querySelectorAll("[data-drink]").forEach(function(b){b.addEventListener("click",function(){addDrink(drinks[Number(b.getAttribute("data-drink"))],b)})});
@@ -347,10 +367,11 @@ var sm=dishSaladMode(item);
 cur=item;curQty=1;curCreams=[];curSalad=sm==="choice"?"Con ensalada":(sm==="papas"?"Solo papas":"");curRice="Con arroz";
 document.getElementById("mName").textContent=item.name;
 document.getElementById("mPrice").textContent=money(item.price);
+var mStockEl=document.getElementById("mStock"),mStockN=itemStock(item);
+if(!isClosed()&&mStockN!==null&&mStockN>0){mStockEl.textContent="Quedan "+mStockN+" unidades de este plato hoy";mStockEl.className="mStock"+(mStockN<=3?" low":"");mStockEl.style.display="block"}
+else{mStockEl.textContent="";mStockEl.style.display="none"}
 document.getElementById("qVal").textContent="1";
 document.getElementById("mNote").value="";
-var stEl=document.getElementById("mStock"),stN=itemStock(item);
-if(stN!==null){stEl.style.display="block";stEl.textContent="Quedan "+stN+(stN===1?" unidad":" unidades")+" de este plato hoy."}else{stEl.style.display="none"}
 document.getElementById("riceBlock").style.display=item.hasRice?"block":"none";
 document.getElementById("saladBlock").style.display=sm==="choice"?"block":"none";
 document.getElementById("papasNote").style.display=sm==="papas"?"block":"none";
@@ -392,6 +413,38 @@ if(payMethod==="yape"&&num){hint.textContent="💜 Yapea al "+num;hint.classList
 else{hint.textContent="";hint.classList.remove("show")}
 }
 segWire("paySeg",function(v){payMethod=v;updateYapeHint()},"data-p");
+var CARTA_URL="https://precuenta44-glitch.github.io/anita-broaster/";
+var shareNoticeTimer=null;
+function showShareMsg(msg){
+var n=document.getElementById("shareNotice");
+n.className="notice ok";
+n.textContent=msg;
+if(shareNoticeTimer)clearTimeout(shareNoticeTimer);
+shareNoticeTimer=setTimeout(function(){n.className="notice";n.textContent=""},3000);
+}
+function copyCartaLink(doneMsg){
+function fallback(){
+var ta=document.createElement("textarea");
+ta.value=CARTA_URL;
+ta.style.position="fixed";ta.style.opacity="0";
+document.body.appendChild(ta);
+ta.focus();ta.select();
+try{document.execCommand("copy")}catch(e){}
+ta.remove();
+showShareMsg(doneMsg);
+}
+if(navigator.clipboard&&navigator.clipboard.writeText){
+navigator.clipboard.writeText(CARTA_URL).then(function(){showShareMsg(doneMsg)}).catch(fallback);
+}else{fallback()}
+}
+document.getElementById("copyLinkBtn").addEventListener("click",function(){copyCartaLink("¡Enlace copiado!")});
+document.getElementById("shareBtn").addEventListener("click",function(){
+if(navigator.share){
+navigator.share({title:"Anita Broaster — Carta QR",text:"Mira la carta de Anita Broaster, pide directo por WhatsApp",url:CARTA_URL}).catch(function(err){
+if(err&&err.name!=="AbortError")copyCartaLink("Enlace copiado, pégalo donde quieras");
+});
+}else{copyCartaLink("Enlace copiado, pégalo donde quieras")}
+});
 document.getElementById("qrDownload").addEventListener("click",function(){
 var src=qrImageSrc();
 function save(href){var a=document.createElement("a");a.href=href;a.download="QR-carta-anita-broaster.png";document.body.appendChild(a);a.click();a.remove()}
