@@ -106,6 +106,16 @@ label.f{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}
 .empty{color:var(--muted);text-align:center;padding:18px 0}
 .notice{border-radius:12px;padding:12px 14px;font-size:14px;margin-top:12px;display:none}
 .notice.ok{display:block;background:var(--green-bg);color:var(--green);font-weight:700}
+.req{color:#B3261E;font-weight:900}
+.reqNote{font-weight:700;color:#B3261E;font-size:12px}
+input.inputError{border-color:#B3261E!important;background:#FFF3F1;box-shadow:0 0 0 3px rgba(179,38,30,.15)}
+.orderAlert{display:none;border:2px solid #B3261E;background:#FDECEA;color:#7A150F;border-radius:14px;padding:14px 16px;margin:14px 0 0;font-size:15px;line-height:1.5}
+.orderAlert.show{display:block}
+.orderAlert b{font-size:16px}
+.orderHint{font-size:14px;font-weight:700;line-height:1.45;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:#FFF4E0;color:#7A4A00;border:1px solid #F2D492}
+.orderHint.ok{background:var(--green-bg);color:var(--green);border-color:transparent}
+.orderHint:empty{display:none}
+@media(prefers-color-scheme:dark){.orderHint{background:#3A2A12;color:#FFD9A0;border-color:#5A421E}.orderAlert{background:#3A1D18;color:#FFD9D2}}
 .closedBanner{display:none;background:#B3261E;color:#fff;text-align:center;font-weight:900;font-size:clamp(22px,6vw,34px);letter-spacing:1px;padding:16px 14px;line-height:1.25}
 .closedBanner.show{display:block}
 .closedBanner small{display:block;font-size:14px;font-weight:700;letter-spacing:.3px;margin-top:4px}
@@ -160,8 +170,8 @@ a.wa{color:var(--green);font-weight:800}
     <div class="sumRow" id="subRow"><span>Subtotal</span><span id="cartSubtotal">S/ 0.00</span></div>
     <div class="sumRow" id="feeRow" style="display:none"><span id="feeLabel">Delivery</span><span id="feeVal">S/ 0.00</span></div>
     <div class="totalRow"><span>Total</span><span id="cartTotal">S/ 0.00</span></div>
-    <label class="f" for="custName">Tu nombre</label>
-    <input type="text" id="custName" placeholder="Ej. María" autocomplete="name"/>
+    <label class="f" for="custName">Tu nombre <span class="req">*</span> <span class="reqNote">obligatorio</span></label>
+    <input type="text" id="custName" placeholder="Ej. María — escribe tu nombre para poder pedir" autocomplete="name"/>
     <label class="f">¿Cómo lo recibes?</label>
     <div class="seg" id="fulfillSeg">
       <button type="button" data-f="En mesa" class="on">🍽️ En mesa</button>
@@ -176,8 +186,8 @@ a.wa{color:var(--green);font-weight:800}
       </div>
       <p class="feeNote">En El Carmen el delivery se suma a tu total. Para otras zonas, el costo del delivery se cotiza por WhatsApp antes de preparar tu pedido.</p>
     </div>
-    <label class="f" for="custExtra" id="extraLabel">Número de mesa (si estás en el local)</label>
-    <input type="text" id="custExtra" placeholder="Ej. Mesa 4 / o tu dirección si es delivery"/>
+    <label class="f" for="custExtra" id="extraLabel">Número de mesa <span class="req">*</span> <span class="reqNote">obligatorio</span></label>
+    <input type="text" id="custExtra" placeholder="Ej. Mesa 4 — obligatorio si estás en mesa"/>
     <label class="f" for="custNote">Nota general (opcional)</label>
     <input type="text" id="custNote" placeholder="Ej. Sin picante, por favor"/>
     <label class="f">Método de pago</label>
@@ -186,8 +196,11 @@ a.wa{color:var(--green);font-weight:800}
       <button type="button" data-p="efectivo" class="on">💵 Efectivo</button>
     </div>
     <p class="yapeHint" id="yapeHint"></p>
+    <div class="orderAlert" id="orderAlert" role="alert" aria-live="assertive"></div>
+    <p class="orderHint" id="orderHint"></p>
     <div style="height:14px"></div>
     <button class="btn green" id="sendBtn" disabled>📲 Pedir por WhatsApp — 974 953 476</button>
+    <p style="color:var(--muted);font-size:13px;margin:8px 0 0">Sin tu nombre y sin tu mesa o dirección no se puede enviar el pedido.</p>
     <div class="notice" id="orderNotice"></div>
     <p style="color:var(--muted);font-size:13px;margin:12px 0 0">Al tocar el botón se abre WhatsApp con tu pedido ya escrito, listo para enviar al número del local.</p>
     <div class="qrShare">
@@ -400,12 +413,62 @@ document.getElementById("modal").classList.remove("open");
 renderCart();
 });
 var fulfill="En mesa",zone="carmen";
+function extraFieldConfig(){
+if(fulfill==="Delivery")return{label:'Dirección de entrega <span class="req">*</span> <span class="reqNote">obligatorio para delivery</span>',placeholder:"Ej. Calle Melchorita 233, El Carmen — obligatorio"};
+if(fulfill==="En mesa")return{label:'Número de mesa <span class="req">*</span> <span class="reqNote">obligatorio si estás en el local</span>',placeholder:"Ej. Mesa 4 — obligatorio"};
+return{label:"Referencia (opcional)",placeholder:"Ej. Paso a recoger en 15 minutos (opcional)"};
+}
+function updateExtraField(){
+var cfg=extraFieldConfig();
+document.getElementById("extraLabel").innerHTML=cfg.label;
+document.getElementById("custExtra").placeholder=cfg.placeholder;
+}
+function missingOrderFields(){
+var missing=[];
+var nameEl=document.getElementById("custName");
+var extraEl=document.getElementById("custExtra");
+if(!nameEl.value.trim())missing.push({id:"custName",text:"tu nombre"});
+if(fulfill==="Delivery"&&!extraEl.value.trim())missing.push({id:"custExtra",text:"tu dirección de entrega"});
+else if(fulfill==="En mesa"&&!extraEl.value.trim())missing.push({id:"custExtra",text:"tu número de mesa"});
+return missing;
+}
+function markMissingFields(missing){
+["custName","custExtra"].forEach(function(id){
+var el=document.getElementById(id);
+var bad=missing.some(function(m){return m.id===id});
+el.classList.toggle("inputError",bad);
+if(bad)el.setAttribute("aria-invalid","true");else el.removeAttribute("aria-invalid");
+});
+}
+function showOrderAlert(missing){
+var box=document.getElementById("orderAlert");
+if(!missing.length){box.className="orderAlert";box.innerHTML="";return}
+var list=missing.map(function(m){return m.text}).join(" y ");
+box.innerHTML="⚠️ <b>Falta completar: "+esc(list)+".</b><br/>No puedes pedir sin poner "+(missing.length>1?"esos datos":"ese dato")+". Escríbelo arriba y recién podrás enviar tu pedido.";
+box.className="orderAlert show";
+}
+function refreshOrderValidation(showAlert){
+var missing=missingOrderFields();
+markMissingFields(showAlert?missing:missing.filter(function(m){var el=document.getElementById(m.id);return el.classList.contains("inputError")&&!el.value.trim()}));
+var hint=document.getElementById("orderHint");
+if(!cart.length||isClosed()){hint.textContent="";hint.className="orderHint"}
+else if(missing.length){hint.textContent="⚠️ Para poder pedir falta: "+missing.map(function(m){return m.text}).join(" y ")+".";hint.className="orderHint"}
+else{hint.textContent="✓ Datos completos: ya puedes enviar tu pedido.";hint.className="orderHint ok"}
+if(showAlert)showOrderAlert(missing);
+else if(!missing.length){var b=document.getElementById("orderAlert");b.className="orderAlert";b.innerHTML=""}
+return missing;
+}
 segWire("fulfillSeg",function(v){
 fulfill=v;
 document.getElementById("zoneBlock").classList.toggle("show",v==="Delivery");
-document.getElementById("extraLabel").textContent=v==="Delivery"?"Dirección de entrega":(v==="En mesa"?"Número de mesa (si estás en el local)":"Referencia (opcional)");
+updateExtraField();
 renderCart();
+refreshOrderValidation(false);
 });
+["custName","custExtra"].forEach(function(id){
+document.getElementById(id).addEventListener("input",function(){refreshOrderValidation(false)});
+});
+updateExtraField();
 segWire("zoneSeg",function(z){zone=z;renderCart()},"data-z");
 function updateYapeHint(){
 var hint=document.getElementById("yapeHint"),num=yapeNumber();
@@ -495,6 +558,7 @@ document.getElementById("feeVal").textContent="a cotizar";
 }else{feeRow.style.display="none"}
 document.getElementById("cartTotal").textContent=money(t);
 document.getElementById("sendBtn").disabled=!cart.length||isClosed();
+if(typeof refreshOrderValidation==="function")refreshOrderValidation(false);
 document.getElementById("barGo").disabled=isClosed();
 var bar=document.getElementById("cartBar");
 bar.style.display=cart.length?"block":"none";
@@ -503,6 +567,13 @@ document.getElementById("barCount").textContent=n+(n===1?" producto":" productos
 }
 document.getElementById("barGo").addEventListener("click",function(){document.getElementById("cartTitle").scrollIntoView({behavior:"smooth"})});
 document.getElementById("sendBtn").addEventListener("click",function(){
+var missing=refreshOrderValidation(true);
+if(missing.length){
+var first=document.getElementById(missing[0].id);
+document.getElementById("orderAlert").scrollIntoView({behavior:"smooth",block:"center"});
+setTimeout(function(){try{first.focus()}catch(e){}},250);
+return;
+}
 var name=document.getElementById("custName").value.trim();
 var extra=document.getElementById("custExtra").value.trim();
 var note=document.getElementById("custNote").value.trim();
