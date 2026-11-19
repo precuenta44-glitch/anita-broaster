@@ -306,6 +306,7 @@ var SETTINGS={};
 function isClosed(){var v=SETTINGS.negocio_abierto;if(v===false)return true;if(typeof v==="string")return v.trim().toLowerCase()==="false";return false}
 function yapeNumber(){var v=SETTINGS.yape_numero;return v==null?"":String(v).trim()}
 function qrImageSrc(){var v=SETTINGS.qr_image;return (typeof v==="string"&&v.indexOf("data:image")===0)?v:"https://precuenta44-glitch.github.io/anita-broaster/qr.png"}
+function whatsappEstilo(){var v=SETTINGS.whatsapp_estilo;if(v==null)return "actual";var s=String(v).trim().toLowerCase();if(s==="corto"||s==="detallado"||s==="sin_emojis"||s==="actual")return s;return "actual"}
 var payMethod="efectivo";
 function dishCreams(it){return it.creams?it.creams:CREAMS}
 function dishSaladMode(it){return it.saladMode||"choice"}
@@ -603,17 +604,7 @@ document.getElementById("barTotal").textContent=money(t);
 document.getElementById("barCount").textContent=n+(n===1?" producto":" productos")+(fee>0?" · incl. delivery "+money(fee):(deliveryQuote()?" · delivery a cotizar":""));
 }
 document.getElementById("barGo").addEventListener("click",function(){document.getElementById("cartTitle").scrollIntoView({behavior:"smooth"})});
-document.getElementById("sendBtn").addEventListener("click",function(){
-var missing=refreshOrderValidation(true);
-if(missing.length){
-var first=document.getElementById(missing[0].id);
-document.getElementById("orderAlert").scrollIntoView({behavior:"smooth",block:"center"});
-setTimeout(function(){try{first.focus()}catch(e){}},250);
-return;
-}
-var name=document.getElementById("custName").value.trim();
-var extra=document.getElementById("custExtra").value.trim();
-var note=document.getElementById("custNote").value.trim();
+function buildActualLines(name,extra,note){
 var lines=["🍗 *PEDIDO — ANITA BROASTER*"];
 if(name)lines.push("Cliente: "+name);
 lines.push("Modalidad: "+fulfill+(extra?" — "+extra:""));
@@ -636,6 +627,80 @@ lines.push("*TOTAL: "+money(cartTotal())+"*");
 if(deliveryQuote())lines.push("Nota: el total no incluye el delivery; el costo para otras zonas se cotiza por WhatsApp.");
 if(hasAsk)lines.push("Nota: algunas bebidas tienen precio a confirmar.");
 if(note)lines.push("Nota: "+note);
+return lines;
+}
+function stripEmojisText(s){var str=String(s);var lead=/^[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u.test(str);var out=str.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\uFE0F\u200D]/gu,"");if(lead)out=out.replace(/^\s+/,"");return out}
+function buildSinEmojisLines(name,extra,note){return buildActualLines(name,extra,note).map(function(l){return stripEmojisText(l)})}
+function itemDetailLines(i){
+if(i.drink)return [i.price>0?"Bebida":"Bebida · precio a confirmar por WhatsApp"];
+var parts=[];
+parts.push("Cremas: "+(i.creams.length?i.creams.join(", "):"sin cremas"));
+if(i.salad)parts.push(i.salad);
+if(i.rice)parts.push(i.rice);
+if(i.note)parts.push("Nota: "+i.note);
+return parts;
+}
+function buildCortoLines(name,extra,note){
+var lines=["🍗 *PEDIDO — ANITA BROASTER*"];
+if(name)lines.push("Cliente: "+name);
+var modLine=fulfill+(extra?": "+extra:"");
+if(fulfill==="Delivery")modLine+=" ("+ZONES[zone].label+")";
+lines.push(modLine);
+lines.push("------------------------");
+cart.forEach(function(i){
+lines.push("• "+i.qty+" × "+i.name+" — "+(i.price>0?money(i.price*i.qty):"a confirmar"));
+});
+lines.push("------------------------");
+lines.push("*TOTAL: "+money(cartTotal())+"*");
+lines.push("Pago: "+(payMethod==="yape"?"Yape":"Efectivo"));
+if(deliveryQuote())lines.push("Delivery a cotizar por WhatsApp.");
+if(note)lines.push("Nota: "+note);
+return lines;
+}
+function buildDetalladoLines(name,extra,note){
+var lines=["🍗 *PEDIDO — ANITA BROASTER*"];
+if(name)lines.push("Cliente: "+name);
+lines.push("Modalidad: "+fulfill+(extra?" — "+extra:""));
+if(fulfill==="Delivery")lines.push("Zona de delivery: "+ZONES[zone].label+(ZONES[zone].fee!=null?" ("+money(ZONES[zone].fee)+")":" (a cotizar)"));
+lines.push("------------------------");
+var hasAsk=false;
+cart.forEach(function(i,idx){
+lines.push((idx+1)+". "+i.qty+" × "+i.name+" — "+(i.price>0?money(i.price*i.qty):"a confirmar"));
+itemDetailLines(i).forEach(function(d){lines.push("   - "+d)});
+if(i.price<=0)hasAsk=true;
+});
+lines.push("------------------------");
+lines.push("Subtotal: "+money(cartSubtotal()));
+if(fulfill==="Delivery"){
+if(deliveryQuote()){lines.push("Delivery ("+ZONES[zone].label+"): a cotizar")}
+else{lines.push("Delivery ("+ZONES[zone].label+"): "+money(deliveryFee()))}
+}
+lines.push("*TOTAL: "+money(cartTotal())+"*");
+lines.push("Pago: "+(payMethod==="yape"?"Yape":"Efectivo"));
+if(deliveryQuote())lines.push("Nota: el total no incluye el delivery; el costo para otras zonas se cotiza por WhatsApp.");
+if(hasAsk)lines.push("Nota: algunas bebidas tienen precio a confirmar.");
+if(note)lines.push("Nota: "+note);
+return lines;
+}
+function buildWhatsappLines(name,extra,note){
+var st=whatsappEstilo();
+if(st==="corto")return buildCortoLines(name,extra,note);
+if(st==="detallado")return buildDetalladoLines(name,extra,note);
+if(st==="sin_emojis")return buildSinEmojisLines(name,extra,note);
+return buildActualLines(name,extra,note);
+}
+document.getElementById("sendBtn").addEventListener("click",function(){
+var missing=refreshOrderValidation(true);
+if(missing.length){
+var first=document.getElementById(missing[0].id);
+document.getElementById("orderAlert").scrollIntoView({behavior:"smooth",block:"center"});
+setTimeout(function(){try{first.focus()}catch(e){}},250);
+return;
+}
+var name=document.getElementById("custName").value.trim();
+var extra=document.getElementById("custExtra").value.trim();
+var note=document.getElementById("custNote").value.trim();
+var lines=buildWhatsappLines(name,extra,note);
 var notice=document.getElementById("orderNotice");
 notice.className="notice ok";
 notice.textContent="✅ Pedido listo: se abre WhatsApp para enviarlo al local.";
