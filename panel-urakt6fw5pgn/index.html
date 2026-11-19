@@ -4,11 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <link rel="icon" type="image/png" sizes="512x512" href="icon-panel-512.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-panel-192.png" />
-    <link rel="shortcut icon" type="image/png" href="favicon.png" />
-    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-panel-512.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-panel-192.png" />
+    <link rel="shortcut icon" type="image/png" href="assets/icon-panel-192.png" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+    <link rel="manifest" href="assets/manifest.webmanifest" />
     <meta name="theme-color" content="#d81f26" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -416,6 +416,17 @@
       .cl-unpaid-line{border:1px solid var(--danger);background:var(--danger-soft);color:var(--ink);border-radius:12px;padding:12px 16px;font-weight:800;font-size:1.05rem;margin:0 0 12px}
       .cl-unpaid-line.clear{border-color:var(--ok);background:var(--ok-soft)}
 
+      /* Editor de la plantilla de WhatsApp */
+      .wa-editor{margin-top:20px;border-top:1px dashed var(--line);padding-top:16px}
+      .wa-editor h4{font-family:"Bricolage Grotesque",sans-serif;font-size:1.12rem;margin:0 0 6px}
+      .wa-template{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.94rem;line-height:1.55;min-height:16rem;white-space:pre-wrap}
+      .wa-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+      .wa-markers{list-style:none;margin:8px 0 4px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+      @media (max-width:620px){ .wa-markers{grid-template-columns:1fr} }
+      .wa-markers li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+      .wa-markers code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;color:var(--accent-strong);font-size:.92rem}
+      .wa-markers span{color:var(--muted);font-size:.88rem}
+
       /* QR de la carta en Activación */
       .qr-preview{width:180px;height:180px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px}
       .qr-none{width:180px;height:180px;border:1px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:.88rem;padding:12px;background:var(--surface)}
@@ -512,9 +523,9 @@
 
       <!-- Portada del restaurante -->
       <header class="hero">
-        <img class="hero-banner" src="img-febb0b65.jpg" alt="Banner de Anita Broaster: hamburguesa, papas fritas y gaseosa" />
+        <img class="hero-banner" src="assets/banner.jpg" alt="Banner de Anita Broaster: hamburguesa, papas fritas y gaseosa" />
         <div class="hero-body">
-          <img class="hero-logo" src="img-68db12d0.png" alt="Logo de Anita Broaster" />
+          <img class="hero-logo" src="assets/logo.png" alt="Logo de Anita Broaster" />
           <div><span class="hero-panel">PANEL</span></div>
           <h1>Anita Broaster</h1>
           <p>Panel del dueño · Tu carta, tus precios y tus bebidas en un solo lugar</p>
@@ -775,9 +786,9 @@
         <p class="sec-tag">5 · Vista previa — aquí ves la carta tal como la ve el cliente.</p>
         <p class="sec-sub">Así se ve la carta del QR con el diseño de restaurante: tu banner, tu logo al centro, los platos <strong>agrupados por categoría y en el orden que pusiste en «Mis platos»</strong>, y la sección de refrescos y gaseosas. Pruébala como un cliente: agrega productos y elige <strong>Delivery</strong> — en <strong>El Carmen</strong> el recargo de <strong>S/ 2.00</strong> se suma solo, una sola vez por pedido, y en <strong>Otras zonas</strong> el delivery es <strong>a cotizar</strong> por WhatsApp.</p>
         <div class="carta">
-          <img class="carta-cover" src="img-febb0b65.jpg" alt="" />
+          <img class="carta-cover" src="assets/banner.jpg" alt="" />
           <div class="carta-head">
-            <img class="carta-logo" src="img-68db12d0.png" alt="Logo de Anita Broaster" />
+            <img class="carta-logo" src="assets/logo.png" alt="Logo de Anita Broaster" />
             <h3>Anita Broaster</h3>
             <p>Broaster, hamburguesas y salchipapas · Pedidos por WhatsApp</p>
           </div>
@@ -982,6 +993,41 @@ create policy "admin borra cierres" on daily_closures
         <label class="f" style="margin-top:12px">Así te llegaría el mensaje (pedido de ejemplo)</label>
         <pre class="sql" id="waEstiloPreview" style="white-space:pre-wrap"></pre>
         <p class="hint">Si tu teléfono muestra los emojis nuevos como cuadros, elige <strong>«Sin emojis»</strong>: el mensaje llega igual de completo, pero solo con texto.</p>
+        <div class="wa-editor">
+          <h4>Editar el mensaje predeterminado (estilo «Actual»)</h4>
+          <p class="hint" style="margin:0 0 12px">Este es el mensaje completo que te llega por cada pedido. Escríbelo como quieras y <strong>se guarda solo</strong> mientras escribes: la carta lo usa desde ese momento para el estilo «Actual». Los <strong>marcadores</strong> entre llaves se reemplazan solos con los datos de cada pedido.</p>
+          <label class="f" for="waPlantilla">Plantilla del mensaje</label>
+          <textarea id="waPlantilla" class="wa-template" rows="11" maxlength="2000" aria-label="Plantilla del mensaje de WhatsApp de los pedidos">🍗 *PEDIDO — ANITA BROASTER*
+*Cliente:* {cliente}
+*Modalidad:* {modalidad}
+*Pago:* {pago}
+*Zona de delivery:* {zona} ({delivery})
+------------------------
+{pedido}
+------------------------
+Subtotal: {subtotal}
+Delivery ({zona}): {delivery}
+*TOTAL: {total}*</textarea>
+          <div class="wa-actions">
+            <button class="btn ghost small" type="button" id="btnWaPlantillaReset">Restablecer el de antes</button>
+            <span class="save-status" id="waPlantillaEstado" aria-live="polite"></span>
+          </div>
+          <p class="hint" style="margin-top:14px">Marcadores que puedes usar en la plantilla — se reemplazan solos con los datos de cada pedido:</p>
+          <ul class="wa-markers">
+            <li><code>{cliente}</code><span>nombre del cliente</span></li>
+            <li><code>{modalidad}</code><span>modalidad con dirección o mesa</span></li>
+            <li><code>{pago}</code><span>Yape o Efectivo</span></li>
+            <li><code>{zona}</code><span>nombre de la zona</span></li>
+            <li><code>{pedido}</code><span>los platos con sus cremas</span></li>
+            <li><code>{subtotal}</code><span>subtotal del pedido</span></li>
+            <li><code>{delivery}</code><span>costo del delivery</span></li>
+            <li><code>{total}</code><span>total a pagar</span></li>
+            <li><code>{notas}</code><span>notas si las hay</span></li>
+          </ul>
+          <label class="f" style="margin-top:12px">Vista previa del mensaje predeterminado (pedido de ejemplo)</label>
+          <pre class="sql" id="waPlantillaPreview" style="white-space:pre-wrap"></pre>
+          <p class="hint">La vista previa usa un pedido de ejemplo: Cenia Aguirre mamá de Juancho, delivery a «7 de junio con Ignacio prado», pago en Efectivo, zona Todo El Carmen. Así se ve exactamente cómo llegará el mensaje por WhatsApp.</p>
+        </div>
       </div>
       <div class="sub-block" id="migracion-nuevo">
         <h3 class="sub-block-title">Activar pagos, ajustes y borrado de pedidos (una sola vez)</h3>
@@ -1074,12 +1120,12 @@ alter table orders add column if not exists pagado boolean not null default fals
       var KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzd21hZWd4ZmxrbXZ5cXZsZm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1NDU3OTIsImV4cCI6MjExMDEyMTc5Mn0.tejhyJpeZKEHXy3IjE_UP9g3nbuyhS3JWqp9VPDG1ns";
       var CREAMS = ["Mayonesa","Ketchup","Ocopa","Huancaína","Aceituna","Golf","Tártara","Mostaza","Ají"];
       var LOCAL_IMG = [
-        { match:"alita", src:"img-ef2b5ff1.jpg" },
-        { match:"entrepierna", src:"img-1196ba00.jpg" },
-        { match:"pierna", src:"img-e78776db.jpg" },
-        { match:"pecho", src:"img-9e55cbaf.jpg" },
-        { match:"hamburguesa", src:"img-cb4d08ca.jpg" },
-        { match:"salchipapa", src:"img-078a3722.jpg" }
+        { match:"alita", src:"assets/alita.jpg" },
+        { match:"entrepierna", src:"assets/entrepierna.jpg" },
+        { match:"pierna", src:"assets/pierna.jpg" },
+        { match:"pecho", src:"assets/pecho.jpg" },
+        { match:"hamburguesa", src:"assets/hamburguesa.jpg" },
+        { match:"salchipapa", src:"assets/salchipapa.jpg" }
       ];
       var state = { products:[], modifiers:{}, canAdd:false, canAddMods:false, storage:false, lastSync:null };
       var pendingUploads = {}; // productId -> File (foto elegida, se sube al guardar)
@@ -1157,7 +1203,7 @@ alter table orders add column if not exists pagado boolean not null default fals
       function localImg(name){
         var n = String(name||"").toLowerCase();
         for (var i=0;i<LOCAL_IMG.length;i++){ if (n.indexOf(LOCAL_IMG[i].match) >= 0) return LOCAL_IMG[i].src; }
-        return "img-ef2b5ff1.jpg";
+        return "assets/alita.jpg";
       }
       function dishImg(p){
         var u = (p.image_url||"").trim();
@@ -1170,8 +1216,8 @@ alter table orders add column if not exists pagado boolean not null default fals
         var u = (p.image_url||"").trim();
         if (u) return u;
         var n = (String(p.name || "") + " " + String(p.category || "")).toLowerCase();
-        if (n.indexOf("maracuy") >= 0 || n.indexOf("refresco") >= 0 || n.indexOf("chicha") >= 0 || n.indexOf("limonada") >= 0 || n.indexOf("jugo") >= 0) return "img-724d5ba9.jpg";
-        return "img-fba273dc.jpg";
+        if (n.indexOf("maracuy") >= 0 || n.indexOf("refresco") >= 0 || n.indexOf("chicha") >= 0 || n.indexOf("limonada") >= 0 || n.indexOf("jugo") >= 0) return "assets/refresco.jpg";
+        return "assets/gaseosa.jpg";
       }
       function productImg(p){
         return isDrink(p) ? drinkImg(p) : dishImg(p);
@@ -1824,7 +1870,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           card.className = "dish" + (p.available ? "" : " off");
           card.innerHTML =
             '<div class="dish-top">' +
-              '<img class="dish-photo" src="' + esc(dishImg(p)) + '" alt="Foto de ' + esc(p.name) + '" onerror="this.src=\'img-ef2b5ff1.jpg\'" />' +
+              '<img class="dish-photo" src="' + esc(dishImg(p)) + '" alt="Foto de ' + esc(p.name) + '" onerror="this.src=\'assets/alita.jpg\'" />' +
               '<div class="dish-main">' +
                 '<div class="dish-name-row"><h3>' + esc(p.name) + '</h3>' +
                 '<span class="badge ' + (p.available ? "" : "no") + '">' + (p.available ? "DISPONIBLE" : "AGOTADO") + "</span></div>" +
@@ -2212,7 +2258,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           var row = document.createElement("div");
           row.className = "drink-row";
           row.innerHTML =
-            '<div class="drink-ph"><img data-dphoto src="' + esc(productImg(p)) + '" alt="Foto de ' + esc(p.name) + '" onerror="this.src=\'img-fba273dc.jpg\'" /></div>' +
+            '<div class="drink-ph"><img data-dphoto src="' + esc(productImg(p)) + '" alt="Foto de ' + esc(p.name) + '" onerror="this.src=\'assets/gaseosa.jpg\'" /></div>' +
             '<div class="drink-main"><strong>' + esc(p.name) + '</strong><div class="cat">' + esc(p.category || "Bebidas") + '</div><div style="margin-top:4px"><span class="save-status" data-dsave-status aria-live="polite"></span><button class="btn ghost mini" type="button" data-dretry hidden>Guardar ahora</button></div></div>' +
             '<span class="badge ' + (p.available ? "" : "no") + '" data-dbadge>' + (p.available ? "DISPONIBLE" : "AGOTADO") + "</span>" +
             '<div class="drink-price"><div class="price-wrap"><span>S/</span><input type="number" data-dprice value="' + (p.price_cents / 100).toFixed(2) + '" min="0" step="0.50" inputmode="decimal" aria-label="Precio de ' + esc(p.name) + '" /></div></div>' +
@@ -2401,7 +2447,7 @@ alter table orders add column if not exists pagado boolean not null default fals
             if (o.soloPapas) tags.push("Solo papas");
           }
           // Platos y bebidas se muestran igual: foto grande arriba de la tarjeta.
-          var fallback = drinksSection ? "img-fba273dc.jpg" : "img-ef2b5ff1.jpg";
+          var fallback = drinksSection ? "assets/gaseosa.jpg" : "assets/alita.jpg";
           var effAvail = !!p.available && stockOf(p) !== 0;
           var stockTxt = stockOf(p) === null ? "" : (stockOf(p) <= 0 ? "" : " · Quedan " + stockOf(p));
           var head = '<div class="ph"><img src="' + esc(productImg(p)) + '" alt="' + esc(p.name) + '" loading="lazy" onerror="this.src=\'' + fallback + '\'" />' +
@@ -2561,19 +2607,8 @@ alter table orders add column if not exists pagado boolean not null default fals
             if (r.ok) return SB + "/storage/v1/object/public/platos/" + name;
             throw new Error("storage");
           }).catch(function(){
-            // Respaldo: si el almacén de fotos no responde, la foto optimizada se guarda dentro del plato.
-            return new Promise(function(res2, rej2){
-              var rd = new FileReader();
-              rd.onload = function(){
-                if (typeof rd.result === "string" && rd.result.length > 1400000){
-                  rej2(photoError("La foto quedó muy pesada para guardarla. Usa una imagen JPG de máximo 1200 × 1200 px."));
-                  return;
-                }
-                res2(rd.result);
-              };
-              rd.onerror = function(){ rej2(photoError("No se pudo guardar la foto.")); };
-              rd.readAsDataURL(info.blob);
-            });
+            // Sin respaldo en base64: si el almacén de fotos no responde, no se guarda nada en la base de datos.
+            throw photoError("No se pudo subir la foto. Revisa tu internet e inténtalo de nuevo.");
           });
         });
       }
@@ -3274,8 +3309,81 @@ alter table orders add column if not exists pagado boolean not null default fals
         var v = String(settingsCache.whatsapp_estilo || "");
         return WA_STYLE_LABELS[v] ? v : "actual";
       }
+      // ---------- plantilla editable del mensaje predeterminado (settings: whatsapp_plantilla) ----------
+      // Plantilla de fábrica: es el formato de siempre. Si el dueño guarda una
+      // propia en whatsapp_plantilla, esa manda; si no hay ninguna guardada,
+      // se usa esta, tal cual.
+      var WA_TEMPLATE_DEFAULT = [
+        "🍗 *PEDIDO — ANITA BROASTER*",
+        "*Cliente:* {cliente}",
+        "*Modalidad:* {modalidad}",
+        "*Pago:* {pago}",
+        "*Zona de delivery:* {zona} ({delivery})",
+        "------------------------",
+        "{pedido}",
+        "------------------------",
+        "Subtotal: {subtotal}",
+        "Delivery ({zona}): {delivery}",
+        "*TOTAL: {total}*"
+      ].join("\n");
+      // Pedido de ejemplo de la vista previa de la plantilla.
+      var WA_TEMPLATE_EXAMPLE = {
+        cliente: "Cenia Aguirre mamá de Juancho",
+        modalidad: "Delivery — 7 de junio con Ignacio prado",
+        pago: "Efectivo",
+        zona: "Todo El Carmen",
+        pedido: "• 2 × Pecho Broaster — S/ 24.00\n *Cremas:* Golf, Ají, Tártara · Con ensalada · Con arroz",
+        subtotal: "S/ 24.00",
+        delivery: "S/ 2.00",
+        total: "S/ 26.00",
+        notas: ""
+      };
+      function renderWaTemplate(tpl){
+        var out = String(tpl == null ? "" : tpl);
+        Object.keys(WA_TEMPLATE_EXAMPLE).forEach(function(k){
+          out = out.split("{" + k + "}").join(WA_TEMPLATE_EXAMPLE[k]);
+        });
+        return out;
+      }
+      function stripWaEmojis(txt){
+        // Quita cada emoji junto con el espacio que lo sigue, sin tocar el
+        // resto del formato (saltos de línea ni sangrías como la de «Cremas»).
+        return String(txt).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}] ?/gu, "");
+      }
+      // La plantilla que manda en la vista previa: lo que haya en el editor;
+      // antes de que el editor exista, la guardada o la de fábrica.
+      function waTemplateForPreview(){
+        var ta = $("waPlantilla");
+        if (ta) return ta.value;
+        var saved = String(settingsCache.whatsapp_plantilla || "");
+        return saved || WA_TEMPLATE_DEFAULT;
+      }
+      function renderWaPlantilla(){
+        var ta = $("waPlantilla");
+        if (ta && document.activeElement !== ta){
+          var saved = String(settingsCache.whatsapp_plantilla || "");
+          ta.value = saved || WA_TEMPLATE_DEFAULT;
+        }
+        var pre = $("waPlantillaPreview");
+        if (pre) pre.textContent = renderWaTemplate(waTemplateForPreview());
+      }
+      function refreshWaPreviews(){
+        var pre = $("waPlantillaPreview");
+        if (pre) pre.textContent = renderWaTemplate(waTemplateForPreview());
+        var sel = $("waEstilo");
+        var main = $("waEstiloPreview");
+        if (main) main.textContent = buildWaPreview(sel ? sel.value : waStyleSaved());
+      }
       // Vista previa con un pedido de ejemplo, en el estilo elegido.
       function buildWaPreview(style){
+        // El estilo «Actual» es la plantilla editable: con plantilla guardada
+        // (o escrita en el editor) se muestra esa; sin ninguna, el formato
+        // fijo de siempre, que es la plantilla de fábrica. «Sin emojis» es el
+        // mismo mensaje, pero sin ningún emoji.
+        if (style === "actual" || style === "sin_emojis"){
+          var rendered = renderWaTemplate(waTemplateForPreview());
+          return style === "sin_emojis" ? stripWaEmojis(rendered) : rendered;
+        }
         var ex = {
           name: "Juan Pérez",
           address: "Calle Las Flores 123 · El Carmen",
@@ -3290,31 +3398,19 @@ alter table orders add column if not exists pagado boolean not null default fals
           var names = ex.items.map(function(it){ return it.qty + " × " + it.name; }).join(", ");
           return ["Pedido — Anita Broaster", ex.name, names, "Total: " + money(ex.total) + " · Pago: " + ex.pay].join("\n");
         }
-        var noEm = style === "sin_emojis";
-        function P(e){ return noEm ? "" : e + " "; }
+        function P(e){ return e + " "; }
         var L = [];
         L.push(P("🍗") + "*PEDIDO — ANITA BROASTER*");
         L.push(P("👤") + "Cliente: " + ex.name);
         L.push(P("📍") + "Dirección: " + ex.address);
         L.push(P("🛵") + "Modo: " + ex.mode);
         L.push("");
-        if (style === "detallado"){
-          L.push("*Detalle del pedido:*");
-          ex.items.forEach(function(it, i){
-            L.push((i + 1) + ") *" + it.qty + " × " + it.name + "* — " + money(it.price * it.qty));
-            if (it.creams.length) L.push("   · Cremas: " + it.creams.join(", "));
-            it.extras.forEach(function(x){ L.push("   · " + x); });
-          });
-        } else {
-          L.push("*Detalle:*");
-          ex.items.forEach(function(it, i){
-            L.push((i + 1) + ") " + it.qty + " × " + it.name + " — " + money(it.price * it.qty));
-            var parts = [];
-            if (it.creams.length) parts.push("Cremas: " + it.creams.join(", "));
-            if (it.extras.length) parts.push(it.extras.join(" · "));
-            if (parts.length) L.push("   " + parts.join(" · "));
-          });
-        }
+        L.push("*Detalle del pedido:*");
+        ex.items.forEach(function(it, i){
+          L.push((i + 1) + ") *" + it.qty + " × " + it.name + "* — " + money(it.price * it.qty));
+          if (it.creams.length) L.push("   · Cremas: " + it.creams.join(", "));
+          it.extras.forEach(function(x){ L.push("   · " + x); });
+        });
         L.push("");
         L.push("Subtotal: " + money(ex.subtotal));
         L.push("Delivery: " + money(ex.delivery));
@@ -3327,6 +3423,7 @@ alter table orders add column if not exists pagado boolean not null default fals
         if (sel && document.activeElement !== sel) sel.value = waStyleSaved();
         var pre = $("waEstiloPreview");
         if (pre) pre.textContent = buildWaPreview(sel ? sel.value : waStyleSaved());
+        renderWaPlantilla();
       }
       if ($("waEstilo")) $("waEstilo").addEventListener("change", function(){
         var sel = this;
@@ -3349,6 +3446,75 @@ alter table orders add column if not exists pagado boolean not null default fals
           toast("No se pudo guardar el estilo. Revisa tu conexión.", true);
         });
       });
+
+      // ---------- autoguardado de la plantilla (settings: whatsapp_plantilla) ----------
+      var waPlantillaTimer = null, waPlantillaBusy = false, waPlantillaAgain = false;
+      function setWaPlantillaStatus(txt, cls){
+        var el = $("waPlantillaEstado");
+        if (!el) return;
+        el.textContent = txt;
+        el.className = "save-status" + (cls ? " " + cls : "");
+      }
+      function saveWaPlantillaNow(){
+        var ta = $("waPlantilla");
+        if (!ta) return;
+        if (waPlantillaBusy){ waPlantillaAgain = true; return; }
+        waPlantillaBusy = true;
+        var val = ta.value;
+        setWaPlantillaStatus("Guardando…", "saving");
+        saveSetting("whatsapp_plantilla", val).then(function(res){
+          waPlantillaBusy = false;
+          if (!res.ok){
+            setWaPlantillaStatus("No se pudo guardar. Revisa tu conexión.", "err");
+            toast(settingsFailMsg(), true);
+            return;
+          }
+          settingsCache.whatsapp_plantilla = val;
+          if (waPlantillaAgain){ waPlantillaAgain = false; saveWaPlantillaNow(); return; }
+          setWaPlantillaStatus("Guardado ✓ " + new Date().toLocaleTimeString("es-PE", { hour:"2-digit", minute:"2-digit" }), "ok");
+        }).catch(function(){
+          waPlantillaBusy = false;
+          waPlantillaAgain = false;
+          setWaPlantillaStatus("No se pudo guardar. Revisa tu conexión.", "err");
+          toast("No se pudo guardar la plantilla. Revisa tu conexión.", true);
+        });
+      }
+      function scheduleWaPlantillaSave(){
+        setWaPlantillaStatus("Guardando…", "saving");
+        refreshWaPreviews();
+        clearTimeout(waPlantillaTimer);
+        waPlantillaTimer = setTimeout(saveWaPlantillaNow, 800);
+      }
+      if ($("waPlantilla")) $("waPlantilla").addEventListener("input", scheduleWaPlantillaSave);
+      if ($("btnWaPlantillaReset")) $("btnWaPlantillaReset").addEventListener("click", function(){
+        var btn = this;
+        var ta = $("waPlantilla");
+        clearTimeout(waPlantillaTimer);
+        if (ta) ta.value = WA_TEMPLATE_DEFAULT;
+        refreshWaPreviews();
+        btn.disabled = true;
+        setWaPlantillaStatus("Guardando…", "saving");
+        saveSetting("whatsapp_plantilla", "").then(function(res){
+          btn.disabled = false;
+          if (!res.ok){
+            setWaPlantillaStatus("No se pudo guardar. Revisa tu conexión.", "err");
+            toast(settingsFailMsg(), true);
+            return;
+          }
+          settingsCache.whatsapp_plantilla = "";
+          if (ta) ta.value = WA_TEMPLATE_DEFAULT;
+          refreshWaPreviews();
+          setWaPlantillaStatus("Guardado ✓ " + new Date().toLocaleTimeString("es-PE", { hour:"2-digit", minute:"2-digit" }) + " · Mensaje de antes restablecido", "ok");
+          toast("Mensaje predeterminado restablecido: vuelve el de antes.");
+        }).catch(function(){
+          btn.disabled = false;
+          setWaPlantillaStatus("No se pudo guardar. Revisa tu conexión.", "err");
+          toast("No se pudo restablecer. Revisa tu conexión.", true);
+        });
+      });
+      // Pinta las vistas previas al instante con la plantilla de fábrica;
+      // loadSettings las repinta si hay una plantilla guardada.
+      refreshWaPreviews();
 
       // ---------- pizarra de pedidos ----------
       var pizFilter = "pendientes";
@@ -3814,7 +3980,7 @@ alter table orders add column if not exists pagado boolean not null default fals
             if (reg && reg.catch) {
               reg.catch(function () {
                 try {
-                  var reg2 = navigator.serviceWorker.register("sw.js");
+                  var reg2 = navigator.serviceWorker.register("assets/sw.js");
                   if (reg2 && reg2.catch) reg2.catch(function () {});
                 } catch (err2) { /* sin service worker el panel funciona igual */ }
               });
