@@ -773,7 +773,7 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden)fetc
 <script>
 if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)){
 window.addEventListener("load",function(){
-navigator.serviceWorker.register("assets/sw.js").catch(function(){});
+navigator.serviceWorker.register("sw.js").catch(function(){});
 });
 }
 </script>
