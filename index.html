@@ -606,30 +606,45 @@ document.getElementById("barTotal").textContent=money(t);
 document.getElementById("barCount").textContent=n+(n===1?" producto":" productos")+(fee>0?" · incl. delivery "+money(fee):(deliveryQuote()?" · delivery a cotizar":""));
 }
 document.getElementById("barGo").addEventListener("click",function(){document.getElementById("cartTitle").scrollIntoView({behavior:"smooth"})});
-function buildActualLines(name,extra,note){
-var lines=["🍗 *PEDIDO — ANITA BROASTER*"];
-if(name)lines.push("Cliente: "+name);
-lines.push("Modalidad: "+fulfill+(extra?" — "+extra:""));
-lines.push("Pago: "+(payMethod==="yape"?"Yape":"Efectivo"));
-if(fulfill==="Delivery")lines.push("Zona de delivery: "+ZONES[zone].label+(ZONES[zone].fee!=null?" ("+money(ZONES[zone].fee)+")":" (a cotizar)"));
-lines.push("------------------------");
-var hasAsk=false;
-cart.forEach(function(i){
-lines.push("• "+i.qty+" × "+i.name+" — "+(i.price>0?money(i.price*i.qty):"a confirmar"));
-lines.push("   "+itemDetail(i));
-if(i.price<=0)hasAsk=true;
-});
-lines.push("------------------------");
-lines.push("Subtotal: "+money(cartSubtotal()));
-if(fulfill==="Delivery"){
-if(deliveryQuote()){lines.push("Delivery ("+ZONES[zone].label+"): a cotizar")}
-else{lines.push("Delivery ("+ZONES[zone].label+"): "+money(deliveryFee()))}
+var WA_TEMPLATE_DEFAULT="🍗 *PEDIDO — ANITA BROASTER*\n*Cliente:* {cliente}\n*Modalidad:* {modalidad}\n*Pago:* {pago}\n*Zona de delivery:* {zona} ({delivery})\n------------------------\n{pedido}\n------------------------\nSubtotal: {subtotal}\nDelivery ({zona}): {delivery}\n*TOTAL: {total}*";
+function waDetail(i){
+if(i.drink)return i.price>0?"Bebida":"Bebida · precio a confirmar por WhatsApp";
+var parts=["*Cremas:* "+(i.creams.length?i.creams.join(", "):"sin cremas")];
+if(i.salad)parts.push(i.salad);
+if(i.rice)parts.push(i.rice);
+if(i.note)parts.push("Nota: "+i.note);
+return parts.join(" · ");
 }
-lines.push("*TOTAL: "+money(cartTotal())+"*");
-if(deliveryQuote())lines.push("Nota: el total no incluye el delivery; el costo para otras zonas se cotiza por WhatsApp.");
-if(hasAsk)lines.push("Nota: algunas bebidas tienen precio a confirmar.");
-if(note)lines.push("Nota: "+note);
+function waTemplateData(name,extra,note){
+var pedido=[];
+cart.forEach(function(i){
+pedido.push("• "+i.qty+" × "+i.name+" — "+(i.price>0?money(i.price*i.qty):"a confirmar"));
+pedido.push(" "+waDetail(i));
+});
+var notas=[];
+if(deliveryQuote())notas.push("Nota: el total no incluye el delivery; el costo para otras zonas se cotiza por WhatsApp.");
+var hasAsk=false;cart.forEach(function(i){if(i.price<=0)hasAsk=true});
+if(hasAsk)notas.push("Nota: algunas bebidas tienen precio a confirmar.");
+if(note)notas.push("Nota: "+note);
+return{cliente:name||"",modalidad:fulfill+(extra?" — "+extra:""),pago:(payMethod==="yape"?"Yape":"Efectivo"),zona:(fulfill==="Delivery"?ZONES[zone].label:""),pedido:pedido.join("\n"),subtotal:money(cartSubtotal()),delivery:(fulfill==="Delivery"?(deliveryQuote()?"a cotizar":money(deliveryFee())):""),total:money(cartTotal()),notas:notas.join("\n")};
+}
+function renderWaTemplate(tpl,name,extra,note){
+var d=waTemplateData(name,extra,note);
+var out=String(tpl);
+for(var k in d){out=out.split("{"+k+"}").join(d[k])}
+var lines=[];
+out.split("\n").forEach(function(l){
+var t=l.trim();
+if(!t)return;
+var bare=t.replace(/^\*[^*]+\*\s*/,"").replace(/\(\s*\)/g,"").trim();
+if(!bare)return;
+if(/^[^:]+:\s*$/.test(bare))return;
+lines.push(l);
+});
 return lines;
+}
+function buildActualLines(name,extra,note){
+return renderWaTemplate(WA_TEMPLATE_DEFAULT,name,extra,note);
 }
 function stripEmojisText(s){var str=String(s);var lead=/^[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u.test(str);var out=str.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\uFE0F\u200D]/gu,"");if(lead)out=out.replace(/^\s+/,"");return out}
 function buildSinEmojisLines(name,extra,note){return buildActualLines(name,extra,note).map(function(l){return stripEmojisText(l)})}
@@ -689,6 +704,8 @@ var st=whatsappEstilo();
 if(st==="corto")return buildCortoLines(name,extra,note);
 if(st==="detallado")return buildDetalladoLines(name,extra,note);
 if(st==="sin_emojis")return buildSinEmojisLines(name,extra,note);
+var tpl=SETTINGS.whatsapp_plantilla;
+if(tpl&&String(tpl).trim())return renderWaTemplate(String(tpl),name,extra,note);
 return buildActualLines(name,extra,note);
 }
 document.getElementById("sendBtn").addEventListener("click",function(){
