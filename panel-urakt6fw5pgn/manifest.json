@@ -1,0 +1,33 @@
+{
+ "background_color": "#fff7ea",
+ "description": "Panel del dueño de Anita Broaster: platos, precios, stock, pedidos y cierre del día.",
+ "display": "standalone",
+ "icons": [
+  {
+   "src": "icon-panel-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-panel-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-panel-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ],
+ "id": "./index.html",
+ "lang": "es",
+ "name": "Panel del Dueño — Anita Broaster",
+ "orientation": "portrait",
+ "scope": "./",
+ "short_name": "Panel Anita",
+ "start_url": "./index.html",
+ "theme_color": "#d81f26"
+}
