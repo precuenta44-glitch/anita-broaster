@@ -44,7 +44,7 @@ h2.sec::after{content:"";flex:1;height:3px;border-radius:2px;background:linear-g
 .sub{color:var(--muted);margin:0 0 16px;font-size:15px;line-height:1.5}
 .catGroup{margin-top:26px}
 .catGroup:first-child{margin-top:4px}
-h3.cat{font-size:24px;font-weight:900;letter-spacing:.2px;margin:0 0 12px;display:flex;align-items:center;gap:12px;color:var(--ink)}
+h3.cat{font-size:24px;font-weight:900;letter-spacing:.2px;margin:0 0 12px;display:flex;align-items:center;gap:12px;color:var(--ink);scroll-margin-top:16px}
 h3.cat::after{content:"";flex:1;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--brand),var(--amber),transparent)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
@@ -161,7 +161,6 @@ a.wa{color:var(--green);font-weight:800}
     <p class="lead">Escaneaste el QR y llegaste a nuestra carta. Elige tu plato, tus cremas y las opciones que lleva — con o sin ensalada y con o sin arroz, según el plato — y pide directo por WhatsApp: para comer aquí en el local, para llevar o por delivery.</p>
     <div class="badges">
       <span class="pill" id="openPill"><span class="dot"></span> Carta de hoy</span>
-      <span class="pill">🍽️ Nuevo: ahora también puedes comer aquí, en el local</span>
       <span class="pill">🛵 Delivery: El Carmen S/ 2 · Otras zonas a cotizar</span>
       <span class="pill">WhatsApp 974 953 476</span>
     </div>
@@ -169,21 +168,10 @@ a.wa{color:var(--green);font-weight:800}
 </header>
 <main class="wrap">
   <nav class="navchips" aria-label="Secciones de la carta">
-    <a href="#enLocal">🍽️ Comer aquí</a>
     <a href="#platos">🍗 Platos</a>
     <a href="#bebidas">🥤 Bebidas</a>
     <a href="#cartTitle">🧾 Tu pedido</a>
   </nav>
-  <section class="localBox" id="enLocal" aria-label="Comer en el local">
-    <h2>🍽️ ¿Comes aquí? Abrimos las puertas de nuestra casa</h2>
-    <p>Además del delivery de siempre, ahora también puedes sentarte a comer aquí mismo, en el local, usando esta misma carta virtual. Es así de fácil:</p>
-    <ol class="steps">
-      <li><b class="n">1</b>Escanea el QR, mira la carta y elige tu plato con tus cremas.</li>
-      <li><b class="n">2</b>En «Tu pedido», marca <b>En mesa</b> y escribe tu <b>número de mesa</b>.</li>
-      <li><b class="n">3</b>Envía tu pedido y te lo llevamos a tu mesa. Pagas aquí mismo, en efectivo o Yape — <b>sin costo de delivery</b>.</li>
-    </ol>
-    <p class="feeNote" style="margin-top:8px">¿Prefieres delivery o para llevar? Todo sigue igual: elige esa opción en tu pedido y listo.</p>
-  </section>
   <h2 class="sec" id="platos">La carta de hoy</h2>
   <p class="sub" id="menuSub">Lo que ves es lo que hay hoy. Si un plato se acaba, aparece como <b>AGOTADO</b> y ya no se puede pedir.</p>
   <div id="menuGrid"></div>
@@ -332,6 +320,19 @@ function soldOut(it){return isClosed()||!it.available||itemStock(it)===0}
 function money(n){return "S/ "+Number(n).toFixed(2)}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function categoryOf(it){var c=it&&it.category?String(it.category).trim():"";return c||"Platos"}
+function catSlug(name){return String(name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")}
+var hashJumpDone=false;
+function jumpToHashCategory(){
+if(hashJumpDone)return;
+var h=window.location.hash||"";
+if(h.indexOf("#cat-")!==0)return;
+var id=h.slice(1);
+try{id=decodeURIComponent(id)}catch(e){}
+var el=document.getElementById(id);
+if(!el)return;
+hashJumpDone=true;
+setTimeout(function(){el.scrollIntoView({behavior:"smooth",block:"start"})},80);
+}
 function renderMenu(){
 var g=document.getElementById("menuGrid");g.innerHTML="";
 if(!menu.length){g.innerHTML='<p class="empty">No hay platos en la carta por ahora.</p>';return}
@@ -344,7 +345,7 @@ byCat[key].items.push({it:it,idx:idx});
 });
 groups.forEach(function(gr){
 var sec=document.createElement("section");sec.className="catGroup";
-var h=document.createElement("h3");h.className="cat";h.textContent=gr.name;
+var h=document.createElement("h3");h.className="cat";h.id="cat-"+catSlug(gr.name);h.textContent=gr.name;
 sec.appendChild(h);
 var grid=document.createElement("div");grid.className="grid";
 gr.items.forEach(function(entry){
@@ -722,10 +723,12 @@ var bySort=function(a,b){return(a.sortOrder-b.sortOrder)||(a.price-b.price)};
 if(food.length){menu=food.sort(bySort);renderMenu()}
 drinks=dr.length?dr.sort(bySort):LOCAL_DRINKS.slice();
 renderDrinks();
+jumpToHashCategory();
 }
 })
 .catch(function(){
 fetchBusy=false;failCount++;
+jumpToHashCategory();
 var wait=Math.min(60000,5000*Math.pow(2,Math.min(failCount,3)));
 setTimeout(fetchMenu,wait);
 });
