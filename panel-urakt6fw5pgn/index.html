@@ -320,6 +320,11 @@
       .dish-group-head span{color:var(--muted);font-size:.85rem;font-weight:600}
       .dish-group-head::after{content:"";flex:1;height:1px;background:var(--line);min-width:24px}
       .dish-group-head .cat-head-actions{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+      /* Grupo «Cremas» al final de la lista de platos (no es una categoría) */
+      .creams-group-head{display:flex;align-items:center;gap:10px;margin:26px 0 10px;flex-wrap:wrap}
+      .creams-group-head h3{font-size:1.22rem}
+      .creams-group-head span{color:var(--muted);font-size:.85rem;font-weight:600}
+      .creams-group-head::after{content:"";flex:1;height:1px;background:var(--line);min-width:24px}
       .move-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
       .move-pos{color:var(--muted);font-size:.88rem;font-weight:600;flex:1;min-width:160px}
       .move-btns{display:flex;gap:8px;flex-wrap:wrap}
@@ -332,6 +337,15 @@
       .global-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
       .global-row .gname{font-weight:700;flex:1;min-width:130px}
       .global-row .gcount{color:var(--muted);font-size:.88rem;font-weight:600}
+      /* Selector de platos para agregar una crema */
+      .cream-picker{margin-top:14px;background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:14px}
+      .cream-picker h4{margin:0 0 4px;font-size:1.05rem}
+      .picker-list{max-height:320px;overflow-y:auto;margin:10px 0 2px}
+      .picker-row{display:flex;gap:10px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:var(--surface2);cursor:pointer}
+      .picker-row .pname{flex:1;font-weight:600}
+      .picker-row .has{color:var(--muted);font-size:.85rem;font-weight:700;white-space:nowrap}
+      .picker-row.off{opacity:.6;cursor:default}
+      .picker-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
       /* Pizarra de pedidos */
       .piz-stats{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}
       .piz-stat{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;flex:1;min-width:150px}
@@ -527,15 +541,31 @@
             <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="btnBizCloseYes" style="background:var(--danger);color:#fff;border-color:var(--danger)">Sí, cerrar y poner stock en 0</button><button class="btn ghost" type="button" id="btnBizCloseNo">Cancelar</button></div>
           </div>
         </div>
-        <div class="global-card" id="globalCreamsCard">
+        <div class="global-card" id="globalCreamsCard" hidden>
           <h3>Cremas y ensalada de TODOS los platos</h3>
-          <p class="hint" style="margin:0 0 12px">¿Se acabó una crema o llegó más? Aquí la quitas o la agregas <strong>en todos los platos de comida a la vez</strong> (las bebidas no se tocan). Quitarla de todos no la borra para siempre: la puedes volver a agregar cuando quieras con el campo de abajo. Las cremas de un solo plato se siguen editando en su editor, parte 4.</p>
+          <p class="hint" style="margin:0 0 12px">¿Se acabó una crema o llegó más? Aquí la quitas <strong>de todos los platos de comida a la vez</strong>, o la agregas <strong>eligiendo a qué platos ponérsela</strong> (las bebidas no se tocan). Quitarla de todos no la borra para siempre: la puedes volver a agregar cuando quieras con el campo de abajo. Las cremas de un solo plato se siguen editando en su editor, parte 4.</p>
           <div id="globalCreamsList"><div class="empty">Cargando cremas…</div></div>
           <div class="cream-add-row" style="margin-top:12px">
             <input type="text" id="globalCreamInput" maxlength="40" placeholder="Ej.: Crema de rocoto, Queso…" aria-label="Nueva crema para todos los platos" />
             <button class="btn" type="button" id="btnGlobalAdd">Agregar a todos los platos</button>
           </div>
-          <p class="hint">«Agregar a todos» pone esa crema en cada plato de comida que todavía no la tenga, sin duplicar los que ya la tienen.</p>
+          <p class="hint">«Agregar a todos los platos» abre la lista de platos para que elijas a cuáles ponerle esa crema. Los platos que ya la tienen salen marcados «ya la tiene» y no se duplican.</p>
+          <div class="cream-picker" id="creamPicker" hidden>
+            <h4 id="creamPickerTitle">¿A qué platos le pongo esta crema?</h4>
+            <p class="hint" style="margin:0">Marca los platos que quieras. Los que ya tienen esta crema salen marcados «ya la tiene» y no se pueden elegir.</p>
+            <div class="cream-add-row">
+              <input type="text" id="creamPickerSearch" maxlength="40" placeholder="Buscar plato…" aria-label="Buscar plato" />
+            </div>
+            <div class="picker-actions" style="margin-top:2px">
+              <button class="btn ghost small" type="button" id="btnPickerAll">Seleccionar todos</button>
+              <button class="btn ghost small" type="button" id="btnPickerNone">Quitar selección</button>
+            </div>
+            <div class="picker-list" id="creamPickerList"></div>
+            <div class="picker-actions">
+              <button class="btn" type="button" id="btnPickerConfirm">Agregar a los elegidos</button>
+              <button class="btn ghost" type="button" id="btnPickerCancel">Cancelar</button>
+            </div>
+          </div>
         </div>
         <div class="global-card" id="catQuickCard">
           <h3>Categorías de la carta</h3>
@@ -1218,6 +1248,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           $("connDot").className = "dot err";
           $("connTxt").textContent = "Sin conexión con la carta";
           $("connSub").textContent = "Revisa tu internet y pulsa «Actualizar ahora».";
+          placeCreamsGroup();
         });
       }
 
@@ -1665,6 +1696,10 @@ alter table orders add column if not exists pagado boolean not null default fals
       function renderList(){
         var box = $("listaPlatos");
         var dishes = state.products.filter(function(p){ return !isDrink(p); });
+        // La tarjeta de cremas vive dentro de esta lista (grupo «Cremas», al
+        // final): se rescata antes de limpiar para no borrarla ni perder sus botones.
+        var gcNode = $("globalCreamsCard");
+        if (gcNode && gcNode.parentNode === box) box.removeChild(gcNode);
         box.innerHTML = "";
         var groups = [], byCat = {};
         dishes.forEach(function(p){
@@ -1680,6 +1715,7 @@ alter table orders add column if not exists pagado boolean not null default fals
         groups = sortCatRaws(groups);
         if (!groups.length){
           box.innerHTML = '<div class="empty">Todavía no hay platos en tu carta. Agrega el primero en la sección «2 · Agregar plato nuevo» (las bebidas van en «3 · Refrescos y gaseosas»).</div>';
+          placeCreamsGroup();
           return;
         }
         var withItems = groups.filter(function(g){ return (byCat[g] || []).length > 0; });
@@ -1719,6 +1755,9 @@ alter table orders add column if not exists pagado boolean not null default fals
             renderDishCard(box, p, idxInGroup, items.length);
           });
         });
+        // Al final de la lista, después de todas las categorías de comida y
+        // antes de Bebidas: el grupo «Cremas» con el gestor global de cremas.
+        placeCreamsGroup();
       }
 
       function renderDishCard(box, p, idxInGroup, groupSize){
@@ -1965,7 +2004,7 @@ alter table orders add column if not exists pagado boolean not null default fals
             if ((heads[i].getAttribute("data-cat-group") || "").toLowerCase() === String(catRaw || "").toLowerCase()){
               var anchor = heads[i];
               var sib = anchor.nextElementSibling;
-              while (sib && !sib.classList.contains("dish-group-head")){ anchor = sib; sib = sib.nextElementSibling; }
+              while (sib && !sib.classList.contains("dish-group-head") && !sib.classList.contains("creams-group-head")){ anchor = sib; sib = sib.nextElementSibling; }
               if (anchor !== card && card.parentNode) anchor.parentNode.insertBefore(card, anchor.nextSibling);
               return;
             }
@@ -2864,6 +2903,21 @@ alter table orders add column if not exists pagado boolean not null default fals
       });
 
       // ---------- cremas globales (todos los platos de comida) ----------
+      // El gestor vive como grupo «Cremas» al final de la lista de Mis platos:
+      // después de todas las categorías de comida y antes de Bebidas. NO es una
+      // categoría: no entra en desplegables, ni en la sección 6, ni en la carta.
+      // Se mueve el nodo (no se recrea) para conservar los botones ya conectados.
+      function placeCreamsGroup(){
+        var box = $("listaPlatos"), gc = $("globalCreamsCard");
+        if (!box || !gc) return;
+        if (gc.parentNode) gc.parentNode.removeChild(gc);
+        var head = document.createElement("div");
+        head.className = "creams-group-head";
+        head.innerHTML = "<h3>Cremas</h3><span>Cremas y ensalada de todos los platos</span>";
+        box.appendChild(head);
+        gc.hidden = false;
+        box.appendChild(gc);
+      }
       function foodProducts(){ return state.products.filter(function(p){ return !isDrink(p); }); }
       function renderGlobalCreams(){
         var box = $("globalCreamsList");
@@ -2879,8 +2933,8 @@ alter table orders add column if not exists pagado boolean not null default fals
           row.innerHTML = '<span class="gname">' + esc(name) + '</span><span class="gcount">En ' + counts[name] + ' de ' + foods.length + ' platos</span>';
           var bq = document.createElement("button"); bq.className = "btn danger small"; bq.type = "button"; bq.textContent = "Quitar de todos";
           bq.addEventListener("click", function(){ globalRemoveCream(name, false, bq); });
-          var ba = document.createElement("button"); ba.className = "btn ghost small"; ba.type = "button"; ba.textContent = "Agregar a todos";
-          ba.addEventListener("click", function(){ globalAddCream(name, false, ba); });
+          var ba = document.createElement("button"); ba.className = "btn ghost small"; ba.type = "button"; ba.textContent = "Agregar a todos los platos";
+          ba.addEventListener("click", function(){ openCreamPicker(name, false); });
           row.appendChild(ba); row.appendChild(bq); box.appendChild(row);
         });
         if (!names.length) box.innerHTML = '<div class="empty">Ningún plato tiene cremas todavía. Agrega la primera abajo.</div>';
@@ -2890,8 +2944,8 @@ alter table orders add column if not exists pagado boolean not null default fals
         erow.innerHTML = '<span class="gname">Ensalada (Con ensalada)</span><span class="gcount">En ' + ensCount + ' de ' + foods.length + ' platos</span>';
         var ebq = document.createElement("button"); ebq.className = "btn danger small"; ebq.type = "button"; ebq.textContent = "Quitar de todos";
         ebq.addEventListener("click", function(){ globalRemoveCream("Con ensalada", true, ebq); });
-        var eba = document.createElement("button"); eba.className = "btn ghost small"; eba.type = "button"; eba.textContent = "Agregar a todos";
-        eba.addEventListener("click", function(){ globalAddCream("Con ensalada", true, eba); });
+        var eba = document.createElement("button"); eba.className = "btn ghost small"; eba.type = "button"; eba.textContent = "Agregar a todos los platos";
+        eba.addEventListener("click", function(){ openCreamPicker("Con ensalada", true); });
         erow.appendChild(eba); erow.appendChild(ebq); box.appendChild(erow);
       }
       function globalRemoveCream(name, isSalad, btn){
@@ -2907,28 +2961,82 @@ alter table orders add column if not exists pagado boolean not null default fals
           loadAll();
         }).catch(function(){ if (btn) btn.disabled = false; toast("No se pudo quitar de todos. Revisa tu conexión o completa la sección 7 · Activación.", true); });
       }
-      function globalAddCream(name, isSalad, btn){
-        var foods = foodProducts(); if (!foods.length) return;
+      // ---------- selector de platos para agregar una crema ----------
+      var creamPicker = { name:"", isSalad:false, checked:{} };
+      function dishHasCream(p, name, isSalad){
+        var cur = state.modifiers[p.id] || [];
+        return isSalad ? cur.indexOf("Con ensalada") >= 0 : cur.indexOf(name) >= 0;
+      }
+      function openCreamPicker(name, isSalad){
+        creamPicker.name = name; creamPicker.isSalad = !!isSalad; creamPicker.checked = {};
+        var box = $("creamPicker"); if (!box) return;
+        $("creamPickerTitle").textContent = "¿A qué platos le pongo «" + name + "»?";
+        var s = $("creamPickerSearch"); if (s) s.value = "";
+        renderCreamPickerList();
+        box.hidden = false;
+        box.scrollIntoView({ behavior:"smooth", block:"nearest" });
+      }
+      function closeCreamPicker(){ var box = $("creamPicker"); if (box) box.hidden = true; }
+      function renderCreamPickerList(){
+        var list = $("creamPickerList"); if (!list) return;
+        var q = ($("creamPickerSearch") ? $("creamPickerSearch").value : "").toLowerCase().trim();
+        var foods = foodProducts();
+        list.innerHTML = "";
+        var shown = 0;
+        foods.forEach(function(p){
+          var nm = String(p.name || "");
+          if (q && nm.toLowerCase().indexOf(q) < 0) return;
+          shown++;
+          var has = dishHasCream(p, creamPicker.name, creamPicker.isSalad);
+          var row = document.createElement("label"); row.className = "picker-row" + (has ? " off" : "");
+          var cb = document.createElement("input"); cb.type = "checkbox"; cb.disabled = has;
+          cb.checked = !has && !!creamPicker.checked[p.id];
+          cb.setAttribute("aria-label", "Agregar a " + nm);
+          cb.addEventListener("change", function(){ if (cb.checked) creamPicker.checked[p.id] = true; else delete creamPicker.checked[p.id]; });
+          var sp = document.createElement("span"); sp.className = "pname"; sp.textContent = nm;
+          row.appendChild(cb); row.appendChild(sp);
+          if (has){ var tag = document.createElement("span"); tag.className = "has"; tag.textContent = "ya la tiene"; row.appendChild(tag); }
+          list.appendChild(row);
+        });
+        if (!shown) list.innerHTML = '<div class="empty">Ningún plato coincide con la búsqueda.</div>';
+      }
+      if ($("creamPickerSearch")) $("creamPickerSearch").addEventListener("input", renderCreamPickerList);
+      if ($("btnPickerAll")) $("btnPickerAll").addEventListener("click", function(){
+        foodProducts().forEach(function(p){ if (!dishHasCream(p, creamPicker.name, creamPicker.isSalad)) creamPicker.checked[p.id] = true; });
+        renderCreamPickerList();
+      });
+      if ($("btnPickerNone")) $("btnPickerNone").addEventListener("click", function(){ creamPicker.checked = {}; renderCreamPickerList(); });
+      if ($("btnPickerCancel")) $("btnPickerCancel").addEventListener("click", closeCreamPicker);
+      if ($("btnPickerConfirm")) $("btnPickerConfirm").addEventListener("click", function(){
+        var targets = foodProducts().filter(function(p){ return creamPicker.checked[p.id]; });
+        if (!targets.length){ toast("Marca al menos un plato para agregarle «" + creamPicker.name + "».", true); return; }
+        globalAddCream(creamPicker.name, creamPicker.isSalad, targets, this);
+      });
+      function globalAddCream(name, isSalad, targets, btn){
+        if (!targets || !targets.length) return;
         if (btn) btn.disabled = true;
         var addNames = isSalad ? ["Con ensalada","Sin ensalada"] : [name];
-        var rows = [];
-        foods.forEach(function(p){
+        var rows = []; var added = {};
+        targets.forEach(function(p){
           var cur = state.modifiers[p.id] || [];
-          addNames.forEach(function(n){ if (cur.indexOf(n) < 0) rows.push({ product_id: p.id, name: n, price_cents: 0 }); });
+          addNames.forEach(function(n){ if (cur.indexOf(n) < 0){ rows.push({ product_id: p.id, name: n, price_cents: 0 }); added[p.id] = true; } });
         });
-        if (!rows.length){ if (btn) btn.disabled = false; toast("«" + name + "» ya está en todos los platos."); return; }
+        var count = Object.keys(added).length;
+        if (!rows.length){ if (btn) btn.disabled = false; toast("«" + name + "» ya está en los platos elegidos."); return; }
         api("modifiers", { method:"POST", headers:{ "Content-Type":"application/json", "Prefer":"return=representation" }, body: JSON.stringify(rows) })
         .then(function(res){
-          if (!res.ok){ if (isRls(res)){ toast("Para agregar cremas primero completa la sección 7 · Activación (una sola vez).", true); showTab("activacion"); } else { toast("No se pudo agregar a todos.", true); } if (btn) btn.disabled = false; return; }
-          toast("«" + name + "» agregada a todos los platos que no la tenían. Ya aparece en la carta.");
+          if (!res.ok){ if (isRls(res)){ toast("Para agregar cremas primero completa la sección 7 · Activación (una sola vez).", true); showTab("activacion"); } else { toast("No se pudo agregar la crema.", true); } if (btn) btn.disabled = false; return; }
+          toast("«" + name + "» agregada a " + count + (count === 1 ? " plato" : " platos") + ". Ya aparece en la carta.");
+          closeCreamPicker();
           loadAll();
-        }).catch(function(){ if (btn) btn.disabled = false; toast("No se pudo agregar a todos. Revisa tu conexión.", true); });
+        }).catch(function(){ if (btn) btn.disabled = false; toast("No se pudo agregar la crema. Revisa tu conexión.", true); });
       }
       if ($("btnGlobalAdd")) $("btnGlobalAdd").addEventListener("click", function(){
         var inp = $("globalCreamInput"); var name = normalizeCreamName(inp.value);
         if (!name){ toast("Escribe el nombre de la crema primero.", true); inp.focus(); return; }
         if (isSpecialModifier(name)){ toast("Esa opción no es una crema: el arroz y la ensalada se controlan en cada plato, y la ensalada global está en su fila de arriba.", true); return; }
-        globalAddCream(name, false, this); inp.value = "";
+        inp.value = "";
+        openCreamPicker(name, false);
       });
       if ($("globalCreamInput")) $("globalCreamInput").addEventListener("keydown", function(ev){ if (ev.key === "Enter"){ ev.preventDefault(); $("btnGlobalAdd").click(); } });
 
