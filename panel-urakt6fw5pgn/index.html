@@ -2560,7 +2560,21 @@ alter table orders add column if not exists pagado boolean not null default fals
           }).then(function(r){
             if (r.ok) return SB + "/storage/v1/object/public/platos/" + name;
             throw new Error("storage");
-          }).catch(function(){ throw photoError("No se pudo subir la foto. Revisa tu internet e inténtalo de nuevo."); });
+          }).catch(function(){
+            // Respaldo: si el almacén de fotos no responde, la foto optimizada se guarda dentro del plato.
+            return new Promise(function(res2, rej2){
+              var rd = new FileReader();
+              rd.onload = function(){
+                if (typeof rd.result === "string" && rd.result.length > 1400000){
+                  rej2(photoError("La foto quedó muy pesada para guardarla. Usa una imagen JPG de máximo 1200 × 1200 px."));
+                  return;
+                }
+                res2(rd.result);
+              };
+              rd.onerror = function(){ rej2(photoError("No se pudo guardar la foto.")); };
+              rd.readAsDataURL(info.blob);
+            });
+          });
         });
       }
 
