@@ -636,7 +636,7 @@ var lines=[];
 out.split("\n").forEach(function(l){
 var t=l.trim();
 if(!t)return;
-var bare=t.replace(/^\*[^*]+\*\s*/,"").replace(/\(\s*\)/g,"").trim();
+var bare=t.replace(/^\*[^*:]+:\*\s*/,"").replace(/\(\s*\)/g,"").trim();
 if(!bare)return;
 if(/^[^:]+:\s*$/.test(bare))return;
 lines.push(l);
