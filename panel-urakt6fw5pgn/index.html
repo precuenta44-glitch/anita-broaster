@@ -4,11 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-panel-512.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-panel-192.png" />
-    <link rel="shortcut icon" type="image/png" href="assets/icon-panel-192.png" />
-    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
-    <link rel="manifest" href="assets/manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-panel-512.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-panel-192.png" />
+    <link rel="shortcut icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#d81f26" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -415,7 +415,7 @@
       .piz-paid-badge{font-size:.82rem;font-weight:800;padding:4px 10px;border-radius:999px;align-self:center}
       .piz-paid-badge.paid{background:#e2f3e8;color:#1e7d46}
       .piz-paid-badge.unpaid{background:#fdecec;color:#c92a2a}
-      body.tv .piz-paid-row{margin-top:7px}
+      body.tv .piz-paid-row{display:none}
       body.tv .btn.piz-paid-btn{font-size:.9rem;padding:8px 10px;min-height:2.2rem}
       body.tv .piz-paid-badge{font-size:.78rem}
       body.tv .piz-unpaid-banner{font-size:.98rem;padding:9px 12px;margin-bottom:10px}
@@ -530,9 +530,9 @@
 
       <!-- Portada del restaurante -->
       <header class="hero">
-        <img class="hero-banner" src="assets/banner.jpg" alt="Banner de Anita Broaster: hamburguesa, papas fritas y gaseosa" />
+        <img class="hero-banner" src="img-febb0b65.jpg" alt="Banner de Anita Broaster: hamburguesa, papas fritas y gaseosa" />
         <div class="hero-body">
-          <img class="hero-logo" src="assets/logo.png" alt="Logo de Anita Broaster" />
+          <img class="hero-logo" src="img-68db12d0.png" alt="Logo de Anita Broaster" />
           <div><span class="hero-panel">PANEL</span></div>
           <h1>Anita Broaster</h1>
           <p>Panel del dueño · Tu carta, tus precios y tus bebidas en un solo lugar</p>
@@ -793,9 +793,9 @@
         <p class="sec-tag">5 · Vista previa — aquí ves la carta tal como la ve el cliente.</p>
         <p class="sec-sub">Así se ve la carta del QR con el diseño de restaurante: tu banner, tu logo al centro, los platos <strong>agrupados por categoría y en el orden que pusiste en «Mis platos»</strong>, y la sección de refrescos y gaseosas. Pruébala como un cliente: agrega productos y elige <strong>Delivery</strong> — en <strong>El Carmen</strong> el recargo de <strong>S/ 2.00</strong> se suma solo, una sola vez por pedido, y en <strong>Otras zonas</strong> el delivery es <strong>a cotizar</strong> por WhatsApp.</p>
         <div class="carta">
-          <img class="carta-cover" src="assets/banner.jpg" alt="" />
+          <img class="carta-cover" src="img-febb0b65.jpg" alt="" />
           <div class="carta-head">
-            <img class="carta-logo" src="assets/logo.png" alt="Logo de Anita Broaster" />
+            <img class="carta-logo" src="img-68db12d0.png" alt="Logo de Anita Broaster" />
             <h3>Anita Broaster</h3>
             <p>Broaster, hamburguesas y salchipapas · Pedidos por WhatsApp</p>
           </div>
@@ -1086,7 +1086,7 @@ alter table orders add column if not exists pagado boolean not null default fals
       <section class="panel-sec s8" id="sec-pizarra" aria-labelledby="hPizarra" hidden>
         <div class="sec-head"><span class="sec-num">8</span><h2 id="hPizarra">Pizarra de pedidos</h2></div>
         <p class="sec-tag">8 · Pizarra — aquí llegan los pedidos como en tu pizarra de la cocina.</p>
-        <p class="sec-sub">Cada pedido es un <strong>cuadro</strong>: arriba el cliente y su dirección, la fecha y la hora (AM/PM) y si es delivery, mesa o recojo; abajo cada producto con su cantidad, sus cremas y si es con o sin arroz y con o sin ensalada, y cómo pagó el cliente (<strong>Pago: Yape</strong> o <strong>Pago: Efectivo</strong>). Como primero entregas y algunos pagan después, cada cuadro trae un botón grande de pago: <strong style="color:#e65100">FALTA PAGAR</strong> cuando todavía no paga y <strong style="color:#1e7d46">✓ PAGADO</strong> cuando ya pagó — tócalo para cambiarlo y se guarda al momento. Arriba ves el resumen <strong>«Faltan pagar»</strong> con cuánto te deben en total, y con el filtro <strong>Faltan pagar</strong> ves solo los pedidos sin pagar, de hoy y de días anteriores. Cuando ya lo preparaste y lo entregaste, pulsa <strong>✕ ENTREGADO</strong> y el cuadro queda tachado con una X grande. Con <strong>Eliminar pedido</strong> borras para siempre un pedido de prueba. La pizarra se actualiza sola cada 15 segundos. En <strong>📺 Pantalla completa</strong> (para tu pantalla grande) los pedidos salen más pequeños: se ven <strong>8 por pantalla</strong>, las opciones de cada pedido van escondidas tras un solo botón <strong>«Acciones»</strong> — al tocarlo se despliegan <strong>ENTREGADO, Cancelar pedido y Eliminar pedido</strong> — para que el pedido se lea completo sin que los botones ocupen espacio, y con los botones <strong>← Anterior</strong> y <strong>Siguiente →</strong> de abajo pasas a los demás pedidos. Con el botón <strong>🔊 Voz</strong> la pizarra lee en voz alta, con voz de hombre, cada pedido nuevo apenas llega — cliente, modalidad, productos con sus cremas, total y pago — y con <strong>Probar voz</strong> escuchas un ejemplo antes de prenderla.</p>
+        <p class="sec-sub">Cada pedido es un <strong>cuadro</strong>: arriba el cliente y su dirección, la fecha y la hora (AM/PM) y si es delivery, mesa o recojo; abajo cada producto con su cantidad, sus cremas y si es con o sin arroz y con o sin ensalada, y cómo pagó el cliente (<strong>Pago: Yape</strong> o <strong>Pago: Efectivo</strong>). Como primero entregas y algunos pagan después, cada cuadro trae un botón grande de pago: <strong style="color:#e65100">FALTA PAGAR</strong> cuando todavía no paga y <strong style="color:#1e7d46">✓ PAGADO</strong> cuando ya pagó — tócalo para cambiarlo y se guarda al momento. Arriba ves el resumen <strong>«Faltan pagar»</strong> con cuánto te deben en total, y con el filtro <strong>Faltan pagar</strong> ves solo los pedidos sin pagar, de hoy y de días anteriores. Cuando ya lo preparaste y lo entregaste, pulsa <strong>✕ ENTREGADO</strong> y el cuadro queda tachado con una X grande. Con <strong>Eliminar pedido</strong> borras para siempre un pedido de prueba. La pizarra se actualiza sola cada 15 segundos. En <strong>📺 Pantalla completa</strong> (para tu pantalla grande) los pedidos salen más pequeños: se ven <strong>8 por pantalla</strong>, las opciones de cada pedido van escondidas tras un solo botón <strong>«Acciones»</strong> — al tocarlo se despliegan <strong>FALTA PAGAR / ✓ PAGADO, ENTREGADO, Cancelar pedido y Eliminar pedido</strong>, y la pastillita de la tarjeta te sigue mostrando si ya pagó o falta pagar — para que el pedido se lea completo sin que los botones ocupen espacio, y con los botones <strong>← Anterior</strong> y <strong>Siguiente →</strong> de abajo pasas a los demás pedidos. Con el botón <strong>🔊 Voz</strong> la pizarra lee en voz alta, con voz de hombre, cada pedido nuevo apenas llega — cliente, modalidad, productos con sus cremas, total y pago — y con <strong>Probar voz</strong> escuchas un ejemplo antes de prenderla.</p>
         <div class="tv-bar" id="tvBar">
           <div class="tv-title">Pizarra de pedidos · Anita Broaster</div>
           <button class="btn voice-off" type="button" id="btnVoiceToggleTv" aria-pressed="false">🔇 Voz: apagada</button>
@@ -1133,12 +1133,12 @@ alter table orders add column if not exists pagado boolean not null default fals
       var KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzd21hZWd4ZmxrbXZ5cXZsZm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1NDU3OTIsImV4cCI6MjExMDEyMTc5Mn0.tejhyJpeZKEHXy3IjE_UP9g3nbuyhS3JWqp9VPDG1ns";
       var CREAMS = ["Mayonesa","Ketchup","Ocopa","Huancaína","Aceituna","Golf","Tártara","Mostaza","Ají"];
       var LOCAL_IMG = [
-        { match:"alita", src:"assets/alita.jpg" },
-        { match:"entrepierna", src:"assets/entrepierna.jpg" },
-        { match:"pierna", src:"assets/pierna.jpg" },
-        { match:"pecho", src:"assets/pecho.jpg" },
-        { match:"hamburguesa", src:"assets/hamburguesa.jpg" },
-        { match:"salchipapa", src:"assets/salchipapa.jpg" }
+        { match:"alita", src:"img-ef2b5ff1.jpg" },
+        { match:"entrepierna", src:"img-1196ba00.jpg" },
+        { match:"pierna", src:"img-e78776db.jpg" },
+        { match:"pecho", src:"img-9e55cbaf.jpg" },
+        { match:"hamburguesa", src:"img-cb4d08ca.jpg" },
+        { match:"salchipapa", src:"img-078a3722.jpg" }
       ];
       var state = { products:[], modifiers:{}, canAdd:false, canAddMods:false, storage:false, lastSync:null };
       var pendingUploads = {}; // productId -> File (foto elegida, se sube al guardar)
@@ -1216,7 +1216,7 @@ alter table orders add column if not exists pagado boolean not null default fals
       function localImg(name){
         var n = String(name||"").toLowerCase();
         for (var i=0;i<LOCAL_IMG.length;i++){ if (n.indexOf(LOCAL_IMG[i].match) >= 0) return LOCAL_IMG[i].src; }
-        return "assets/alita.jpg";
+        return "img-ef2b5ff1.jpg";
       }
       function dishImg(p){
         var u = (p.image_url||"").trim();
@@ -1229,8 +1229,8 @@ alter table orders add column if not exists pagado boolean not null default fals
         var u = (p.image_url||"").trim();
         if (u) return u;
         var n = (String(p.name || "") + " " + String(p.category || "")).toLowerCase();
-        if (n.indexOf("maracuy") >= 0 || n.indexOf("refresco") >= 0 || n.indexOf("chicha") >= 0 || n.indexOf("limonada") >= 0 || n.indexOf("jugo") >= 0) return "assets/refresco.jpg";
-        return "assets/gaseosa.jpg";
+        if (n.indexOf("maracuy") >= 0 || n.indexOf("refresco") >= 0 || n.indexOf("chicha") >= 0 || n.indexOf("limonada") >= 0 || n.indexOf("jugo") >= 0) return "img-724d5ba9.jpg";
+        return "img-fba273dc.jpg";
       }
       function productImg(p){
         return isDrink(p) ? drinkImg(p) : dishImg(p);
@@ -1883,7 +1883,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           card.className = "dish" + (p.available ? "" : " off");
           card.innerHTML =
             '<div class="dish-top">' +
-              '<img class="dish-photo" src="' + esc(dishImg(p)) + '" alt="Foto de ' + esc(p.name) + '" onerror="this.src=\'assets/alita.jpg\'" />' +
+              '<img class="dish-photo" src="' + esc(dishImg(p)) + '" alt="Foto de ' + esc(p.name) + '" onerror="this.src=\'img-ef2b5ff1.jpg\'" />' +
               '<div class="dish-main">' +
                 '<div class="dish-name-row"><h3>' + esc(p.name) + '</h3>' +
                 '<span class="badge ' + (p.available ? "" : "no") + '">' + (p.available ? "DISPONIBLE" : "AGOTADO") + "</span></div>" +
@@ -2271,7 +2271,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           var row = document.createElement("div");
           row.className = "drink-row";
           row.innerHTML =
-            '<div class="drink-ph"><img data-dphoto src="' + esc(productImg(p)) + '" alt="Foto de ' + esc(p.name) + '" onerror="this.src=\'assets/gaseosa.jpg\'" /></div>' +
+            '<div class="drink-ph"><img data-dphoto src="' + esc(productImg(p)) + '" alt="Foto de ' + esc(p.name) + '" onerror="this.src=\'img-fba273dc.jpg\'" /></div>' +
             '<div class="drink-main"><strong>' + esc(p.name) + '</strong><div class="cat">' + esc(p.category || "Bebidas") + '</div><div style="margin-top:4px"><span class="save-status" data-dsave-status aria-live="polite"></span><button class="btn ghost mini" type="button" data-dretry hidden>Guardar ahora</button></div></div>' +
             '<span class="badge ' + (p.available ? "" : "no") + '" data-dbadge>' + (p.available ? "DISPONIBLE" : "AGOTADO") + "</span>" +
             '<div class="drink-price"><div class="price-wrap"><span>S/</span><input type="number" data-dprice value="' + (p.price_cents / 100).toFixed(2) + '" min="0" step="0.50" inputmode="decimal" aria-label="Precio de ' + esc(p.name) + '" /></div></div>' +
@@ -2460,7 +2460,7 @@ alter table orders add column if not exists pagado boolean not null default fals
             if (o.soloPapas) tags.push("Solo papas");
           }
           // Platos y bebidas se muestran igual: foto grande arriba de la tarjeta.
-          var fallback = drinksSection ? "assets/gaseosa.jpg" : "assets/alita.jpg";
+          var fallback = drinksSection ? "img-fba273dc.jpg" : "img-ef2b5ff1.jpg";
           var effAvail = !!p.available && stockOf(p) !== 0;
           var stockTxt = stockOf(p) === null ? "" : (stockOf(p) <= 0 ? "" : " · Quedan " + stockOf(p));
           var head = '<div class="ph"><img src="' + esc(productImg(p)) + '" alt="' + esc(p.name) + '" loading="lazy" onerror="this.src=\'' + fallback + '\'" />' +
@@ -3865,7 +3865,8 @@ alter table orders add column if not exists pagado boolean not null default fals
             '<div class="piz-foot"><span>Total: ' + money(o.total_cents) + '</span><span class="piz-pay' + payCls + '">' + esc(payTxt) + '</span><span class="piz-paid-badge ' + (paid ? "paid" : "unpaid") + '">' + (paid ? "✓ Pagado" : "Falta pagar") + '</span>' + (Number(o.delivery_fee_cents||0) > 0 ? "<span>Delivery: " + money(o.delivery_fee_cents) + "</span>" : "") + "</div>" +
             '<div class="piz-paid-row"></div>' +
             '<div class="piz-actions"></div>';
-          // Botón grande de pago: siempre visible, también en pantalla completa (fuera del menú «Acciones»)
+          // Botón grande de pago: en la pizarra normal va visible bajo el total;
+          // en pantalla completa va dentro del menú «Acciones», como primera opción
           var bPaid = document.createElement("button");
           bPaid.className = "btn piz-paid-btn " + (paid ? "paid" : "unpaid");
           bPaid.type = "button";
@@ -3887,9 +3888,14 @@ alter table orders add column if not exists pagado boolean not null default fals
               toast("No se pudo guardar el pago. Si es la primera vez, ejecuta el texto de «Activar el pago por pedido» en la sección 7 · Activación.", true);
             });
           });
-          card.querySelector(".piz-paid-row").appendChild(bPaid);
           var acts = card.querySelector(".piz-actions");
           var actionBtns = [];
+          if (inTv){
+            // Pantalla completa: el pago es la primera opción del menú «Acciones»
+            actionBtns.push(bPaid);
+          } else {
+            card.querySelector(".piz-paid-row").appendChild(bPaid);
+          }
           if (!isDelivered){
             var bDone = document.createElement("button"); bDone.className = "btn piz-done-btn"; bDone.type = "button"; bDone.textContent = "✕ ENTREGADO";
             bDone.addEventListener("click", function(){ bDone.disabled = true; bDone.textContent = "Marcando…"; patchOrderStatus(o.id, "entregado").then(function(res){ if (!res.ok) throw new Error("patch"); toast("Pedido " + (o.code || "") + " marcado como entregado."); loadPizarra(); loadClosure(); }).catch(function(){ bDone.disabled = false; bDone.textContent = "✕ ENTREGADO"; toast("No se pudo marcar como entregado. Revisa tu conexión.", true); }); });
@@ -3942,6 +3948,16 @@ alter table orders add column if not exists pagado boolean not null default fals
           board.appendChild(card);
         });
       }
+      // Pantalla completa: tocar fuera de un menú «Acciones» abierto lo cierra
+      document.addEventListener("click", function(ev){
+        if (!document.body.classList.contains("tv")) return;
+        if (ev.target && ev.target.closest && ev.target.closest(".piz-actions")) return;
+        document.querySelectorAll(".piz-actions.open").forEach(function(other){
+          other.classList.remove("open");
+          var ot = other.querySelector(".piz-menu-toggle");
+          if (ot){ ot.setAttribute("aria-expanded", "false"); ot.innerHTML = 'Acciones <span class="chev" aria-hidden="true">▾</span>'; }
+        });
+      });
       document.querySelectorAll("[data-piz-filter]").forEach(function(b){
         b.addEventListener("click", function(){
           pizFilter = b.getAttribute("data-piz-filter");
@@ -4162,7 +4178,7 @@ alter table orders add column if not exists pagado boolean not null default fals
             if (reg && reg.catch) {
               reg.catch(function () {
                 try {
-                  var reg2 = navigator.serviceWorker.register("assets/sw.js");
+                  var reg2 = navigator.serviceWorker.register("sw.js");
                   if (reg2 && reg2.catch) reg2.catch(function () {});
                 } catch (err2) { /* sin service worker el panel funciona igual */ }
               });
