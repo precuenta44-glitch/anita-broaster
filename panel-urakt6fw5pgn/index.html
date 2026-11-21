@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/png" sizes="512x512" href="icon-panel-512.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-panel-192.png" />
     <link rel="shortcut icon" type="image/png" href="favicon.png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="manifest" href="manifest.json"/>
@@ -589,7 +589,7 @@
       <section class="panel-sec s1" id="sec-platos" aria-labelledby="hCarta">
         <div class="sec-head"><span class="sec-num">1</span><h2 id="hCarta">Mis platos</h2></div>
         <p class="sec-tag">1 · Mis platos — aquí ves, editas y mueves tus platos.</p>
-        <p class="sec-sub">Estos son los platos que ven tus clientes en la carta del QR. Pulsa <strong>«Editar»</strong> en un plato y se abre su editor por partes numeradas, todo a la vista: <strong>1 Datos · 2 Foto · 3 Stock · 4 Cremas · 5 Arroz y ensalada · 6 Guardado automático</strong>. <strong>Todo se guarda solo</strong> al cambiarlo — sin pulsar «Guardar cambios» y sin que la pantalla se mueva ni se recargue — así terminas un plato y sigues con el siguiente. Ahí cambias el precio, la descripción o la foto, pones la <strong>cantidad disponible (stock)</strong>, marcas <strong>Disponible / Agotado</strong>: cada pedido descuenta el stock solo y, al acabarse, la carta lo muestra <strong>AGOTADO</strong> automáticamente. En cada plato también puedes <strong>agregar o quitar cremas</strong> — se guardan al momento y la carta se actualiza sola. Los platos se muestran <strong>agrupados por su categoría</strong> y con los botones <strong>↑ Subir</strong> y <strong>↓ Bajar</strong> de cada tarjeta mueves el plato dentro de su categoría (el Pecho primero, al último, como gustes): el orden se guarda al momento y la carta lo muestra igual. Las <strong>categorías</strong> se crean en la tarjeta «Categorías de la carta» de aquí abajo, y en el título de cada grupo puedes <strong>subir o bajar la categoría entera</strong> para ubicarla donde quieras en la carta, o agregar un plato directo en ella.</p>
+        <p class="sec-sub">Estos son los platos que ven tus clientes en la carta del QR. Pulsa <strong>«Editar»</strong> en un plato y se abre su editor por partes numeradas, todo a la vista: <strong>1 Datos · 2 Foto · 3 Stock · 4 Cremas · 5 Opciones · 6 Arroz y ensalada · 7 Guardado automático</strong>. <strong>Todo se guarda solo</strong> al cambiarlo — sin pulsar «Guardar cambios» y sin que la pantalla se mueva ni se recargue — así terminas un plato y sigues con el siguiente. Ahí cambias el precio, la descripción o la foto, pones la <strong>cantidad disponible (stock)</strong>, marcas <strong>Disponible / Agotado</strong>: cada pedido descuenta el stock solo y, al acabarse, la carta lo muestra <strong>AGOTADO</strong> automáticamente. En cada plato también puedes <strong>agregar o quitar cremas</strong> — se guardan al momento y la carta se actualiza sola. Los platos se muestran <strong>agrupados por su categoría</strong> y con los botones <strong>↑ Subir</strong> y <strong>↓ Bajar</strong> de cada tarjeta mueves el plato dentro de su categoría (el Pecho primero, al último, como gustes): el orden se guarda al momento y la carta lo muestra igual. Las <strong>categorías</strong> se crean en la tarjeta «Categorías de la carta» de aquí abajo, y en el título de cada grupo puedes <strong>subir o bajar la categoría entera</strong> para ubicarla donde quieras en la carta, o agregar un plato directo en ella.</p>
         <div class="biz-card" id="bizCard">
           <div class="biz-state open" id="bizState">Negocio ABIERTO</div>
           <p class="hint" id="bizHint" style="margin:6px 0 0">Tu carta está abierta y recibiendo pedidos. Al cerrar, todo el stock queda en 0. Al abrir, pon las cantidades del día.</p>
@@ -702,6 +702,16 @@
               <button class="btn ghost small" type="button" id="btnAddCremaNueva">Agregar crema</button>
             </div>
             <p class="hint">Las opciones de arroz y ensalada no son cremas: se controlan abajo con sus interruptores.</p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Opciones que elige el cliente (opcional)</legend>
+            <p class="hint" style="margin-top:0">Solo si el plato lleva opciones, como los combinados y mixtos de parrilla: SOLO CON RACHI, CON MOLLEJA Y RACHI, etc. <strong>No son cremas:</strong> salen en su propia sección de la carta y el cliente elige <strong>una sola</strong>. Toca la <strong>×</strong> para quitar cualquiera. Si no agregas ninguna, en la carta no sale nada de opciones.</p>
+            <div class="cream-tags" id="nOpciones"></div>
+            <div class="cream-add-row">
+              <input type="text" id="nNuevaOpcion" maxlength="40" placeholder="Ej.: SOLO CON RACHI, SOLO CON MOLLEJA…" aria-label="Nombre de la nueva opción" />
+              <button class="btn ghost small" type="button" id="btnAddOpcionNueva">Agregar opción</button>
+            </div>
           </fieldset>
 
           <fieldset>
@@ -1206,7 +1216,7 @@ alter table orders add column if not exists pagado boolean not null default fals
         { match:"hamburguesa", src:"img-cb4d08ca.jpg" },
         { match:"salchipapa", src:"img-078a3722.jpg" }
       ];
-      var state = { products:[], modifiers:{}, canAdd:false, canAddMods:false, storage:false, lastSync:null };
+      var state = { products:[], modifiers:{}, options:{}, canAdd:false, canAddMods:false, storage:false, lastSync:null };
       var pendingUploads = {}; // productId -> File (foto elegida, se sube al guardar)
       var cart = {}; // productId -> cantidad (pedido de prueba en la carta)
       var WA_NUMBER = "51974953476";
@@ -1403,10 +1413,13 @@ alter table orders add column if not exists pagado boolean not null default fals
         else $("connSub").textContent = state.products.length + " platos · Actualizando…";
         return Promise.all([
           api("products?select=*&order=sort_order.asc,created_at.asc"),
-          api("modifiers?select=*")
+          api("modifiers?select=*"),
+          // Opciones por plato (tabla dish_options): si la lectura falla, el
+          // panel sigue igual y el editor simplemente no muestra opciones.
+          api("dish_options?select=*&order=sort_order.asc,id.asc").then(function(r){ return r; }, function(){ return { ok:false, data:[] }; })
         ]).then(function(rs){
           if (!rs[0].ok) throw new Error("products " + rs[0].status);
-          var cartaData = { products: rs[0].data || [], modifiers: rs[1].data || [] };
+          var cartaData = { products: rs[0].data || [], modifiers: rs[1].data || [], options: (rs[2] && rs[2].ok && Array.isArray(rs[2].data)) ? rs[2].data : [] };
           var fp = JSON.stringify(cartaData);
           cacheSet("carta", cartaData);
           state.lastSync = new Date();
@@ -1419,6 +1432,10 @@ alter table orders add column if not exists pagado boolean not null default fals
           state.modifiers = {};
           cartaData.modifiers.forEach(function(m){
             (state.modifiers[m.product_id] = state.modifiers[m.product_id] || []).push(m.name);
+          });
+          state.options = {};
+          cartaData.options.forEach(function(op){
+            (state.options[op.product_id] = state.options[op.product_id] || []).push({ id: op.id, name: op.name, sort_order: op.sort_order });
           });
           if (userIsTyping()){
             // Está escribiendo en un editor: los datos ya quedaron guardados,
@@ -1469,6 +1486,8 @@ alter table orders add column if not exists pagado boolean not null default fals
       function chipsHtml(p){
         var o = parseOpts(p), chips = [];
         if (o.creams.length) chips.push(o.creams.length + " cremas");
+        var nOpts = (state.options[p.id] || []).length;
+        if (nOpts) chips.push(nOpts === 1 ? "1 opción" : nOpts + " opciones");
         if (o.arroz) chips.push("Con / sin arroz");
         if (o.ensalada) chips.push("Con / sin ensalada");
         if (o.soloPapas) chips.push("Solo papas");
@@ -1835,6 +1854,49 @@ alter table orders add column if not exists pagado boolean not null default fals
         toast("Crema «" + name + "» agregada a la lista del plato nuevo.");
         inp.focus();
       }
+      // Lista editable de opciones para el plato nuevo (solo local hasta
+      // guardar; al crear el plato se guardan en dish_options)
+      var newOptions = [];
+      function renderNewOptions(){
+        var box = $("nOpciones");
+        if (!box) return;
+        box.innerHTML = "";
+        if (!newOptions.length){
+          box.innerHTML = '<span class="cream-empty">Sin opciones. Si el plato no las necesita, déjalo así: en la carta no saldrá nada.</span>';
+          return;
+        }
+        newOptions.forEach(function(name, idx){
+          var tag = document.createElement("span");
+          tag.className = "cream-tag";
+          var label = document.createElement("span");
+          label.textContent = name;
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = "×";
+          btn.setAttribute("aria-label", "Quitar opción " + name);
+          btn.addEventListener("click", function(){
+            newOptions.splice(idx, 1);
+            renderNewOptions();
+            toast("Opción «" + name + "» quitada de la lista. Se guardará así al crear el plato.");
+          });
+          tag.appendChild(label);
+          tag.appendChild(btn);
+          box.appendChild(tag);
+        });
+      }
+      function addNewOptionFromInput(){
+        var inp = $("nNuevaOpcion");
+        if (!inp) return;
+        var name = normalizeCreamName(inp.value);
+        if (!name){ toast("Escribe el nombre de la opción primero.", true); inp.focus(); return; }
+        var lower = name.toLowerCase();
+        if (newOptions.some(function(o){ return o.toLowerCase() === lower; })){ toast("Esa opción ya está en la lista.", true); inp.focus(); return; }
+        newOptions.push(name);
+        inp.value = "";
+        renderNewOptions();
+        toast("Opción «" + name + "» agregada a la lista del plato nuevo.");
+        inp.focus();
+      }
       // Editor de cremas de un plato ya creado: guarda al momento en Supabase
       function renderExistingCreamTags(card, p){
         var box = card.querySelector("[data-creams-tags]");
@@ -1869,6 +1931,47 @@ alter table orders add column if not exists pagado boolean not null default fals
             }).catch(function(){
               btn.disabled = false;
               toast("No se pudo quitar la crema. Revisa tu conexión o completa la sección 7 · Activación.", true);
+            });
+          });
+          tag.appendChild(label);
+          tag.appendChild(btn);
+          box.appendChild(tag);
+        });
+      }
+      // Editor de opciones de un plato ya creado: guarda al momento en
+      // dish_options (tabla aparte de las cremas). Cada opción se borra por
+      // su id; si la tabla no responde, el editor queda vacío sin romperse.
+      function renderExistingOptionTags(card, p){
+        var box = card.querySelector("[data-options-tags]");
+        if (!box) return;
+        var opts = state.options[p.id] || [];
+        box.innerHTML = "";
+        if (!opts.length){
+          box.innerHTML = '<span class="cream-empty">Este plato no tiene opciones. Si no agregas ninguna, en la carta no sale nada de opciones.</span>';
+          return;
+        }
+        opts.forEach(function(op){
+          var tag = document.createElement("span");
+          tag.className = "cream-tag";
+          var label = document.createElement("span");
+          label.textContent = op.name;
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = "×";
+          btn.setAttribute("aria-label", "Quitar opción " + op.name + " de " + p.name);
+          btn.addEventListener("click", function(){
+            btn.disabled = true;
+            api("dish_options?id=eq." + encodeURIComponent(op.id), { method:"DELETE", headers:{ "Prefer":"return=representation" } })
+            .then(function(res){
+              if (!res.ok) throw new Error("delete");
+              state.options[p.id] = (state.options[p.id] || []).filter(function(x){ return x.id !== op.id; });
+              renderExistingOptionTags(card, p);
+              var chipsEl = card.querySelector(".chips");
+              if (chipsEl) chipsEl.innerHTML = chipsHtml(p);
+              toast("Opción «" + op.name + "» quitada de «" + p.name + "». Ya no aparece en la carta.");
+            }).catch(function(){
+              btn.disabled = false;
+              toast("No se pudo quitar la opción. Revisa tu conexión.", true);
             });
           });
           tag.appendChild(label);
@@ -1997,9 +2100,15 @@ alter table orders add column if not exists pagado boolean not null default fals
                 '<p class="hint" style="margin:0 0 4px">Toca la × para quitar una crema — se borra al momento y deja de aparecer en la carta. Para agregar, escribe el nombre y pulsa «Agregar crema»: también se guarda al momento.</p>' +
                 '<div class="cream-tags" data-creams-tags></div>' +
                 '<div class="cream-add-row"><input type="text" data-new-cream-input maxlength="40" placeholder="Ej.: Crema de rocoto, Queso…" aria-label="Nueva crema para ' + esc(p.name) + '" /><button class="btn ghost small" type="button" data-add-cream>Agregar crema</button></div>' +
-                '<p class="hint">Sin duplicados: si la crema ya está, te avisamos. El arroz y la ensalada no son cremas: están en la parte 5.</p>' +
+                '<p class="hint">Sin duplicados: si la crema ya está, te avisamos. El arroz y la ensalada no son cremas: están en la parte 6.</p>' +
               "</div>" +
-              '<div class="subsec"><h4><span class="subnum">5</span> Arroz y ensalada</h4>' +
+              '<div class="subsec"><h4><span class="subnum">5</span> Opciones de este plato</h4>' +
+                '<p class="hint" style="margin:0 0 4px">Las opciones <strong>no son cremas</strong>: el cliente elige <strong>una sola</strong>, como cuando elige la ensalada. Sirven para los combinados y mixtos de parrilla: SOLO CON RACHI, CON MOLLEJA Y RACHI, etc. Si el plato no tiene opciones, en la carta no sale nada. Toca la × para quitar una — se borra al momento. Para agregar, escribe el nombre y pulsa «Agregar opción»: también se guarda al momento.</p>' +
+                '<div class="cream-tags" data-options-tags></div>' +
+                '<div class="cream-add-row"><input type="text" data-new-option-input maxlength="40" placeholder="Ej.: SOLO CON RACHI, CON MOLLEJA Y RACHI…" aria-label="Nueva opción para ' + esc(p.name) + '" /><button class="btn ghost small" type="button" data-add-option>Agregar opción</button></div>' +
+                '<p class="hint">La opción que elija el cliente sale en su pedido (en la Pizarra y en el WhatsApp), aparte de las cremas.</p>' +
+              "</div>" +
+              '<div class="subsec"><h4><span class="subnum">6</span> Arroz y ensalada</h4>' +
                 '<div class="opt-row opt-toggles">' +
                   toggleHtml("arroz", "Lleva arroz", "El cliente podrá elegir con arroz o sin arroz.", o.arroz) +
                   toggleHtml("ensalada", "Lleva ensalada", "El cliente podrá elegir con ensalada o sin ensalada.", o.ensalada) +
@@ -2007,7 +2116,7 @@ alter table orders add column if not exists pagado boolean not null default fals
                 "</div>" +
                 '<p class="hint">Si apagas «Lleva arroz» o «Lleva ensalada», esa opción desaparece por completo de la carta en este plato. Los interruptores se guardan solos al tocarlos, sin pulsar ningún botón.</p>' +
               "</div>" +
-              '<div class="subsec"><h4><span class="subnum">6</span> Guardado automático</h4>' +
+              '<div class="subsec"><h4><span class="subnum">7</span> Guardado automático</h4>' +
                 '<p class="hint" style="margin:0 0 10px">Ya no hay botón de guardar: <strong>todo lo que cambies en este plato se guarda solo</strong>. Los textos se guardan unos instantes después de que dejas de escribir; la categoría, la foto, el stock y los interruptores, al momento. Junto al precio del plato ves «Guardando…» y luego «Guardado ✓» con la hora, y la pantalla <strong>no se mueve ni se recarga</strong>: al terminar un plato, bajas al siguiente y listo.</p>' +
                 '<div class="dish-actions" style="margin-top:0">' +
                   '<button class="btn danger" type="button" data-del>Eliminar plato</button>' +
@@ -2037,6 +2146,7 @@ alter table orders add column if not exists pagado boolean not null default fals
 
       function wireCard(card, p){
         renderExistingCreamTags(card, p);
+        renderExistingOptionTags(card, p);
         card.querySelectorAll("[data-move]").forEach(function(b){
           b.addEventListener("click", function(){
             card.querySelectorAll("[data-move]").forEach(function(x){ x.disabled = true; });
@@ -2088,6 +2198,44 @@ alter table orders add column if not exists pagado boolean not null default fals
         }
         if (addCreamBtn) addCreamBtn.addEventListener("click", doAddCream);
         if (newCreamInput) newCreamInput.addEventListener("keydown", function(ev){ if (ev.key === "Enter"){ ev.preventDefault(); doAddCream(); } });
+        // Agregar opción a este plato: se guarda al momento en dish_options
+        var addOptionBtn = card.querySelector("[data-add-option]");
+        var newOptionInput = card.querySelector("[data-new-option-input]");
+        function doAddOption(){
+          if (!newOptionInput) return;
+          var name = normalizeCreamName(newOptionInput.value);
+          if (!name){ toast("Escribe el nombre de la opción primero.", true); newOptionInput.focus(); return; }
+          var current = state.options[p.id] || [];
+          if (current.some(function(x){ return String(x.name).toLowerCase() === name.toLowerCase(); })){ toast("Esa opción ya está en «" + p.name + "».", true); newOptionInput.focus(); return; }
+          if (addOptionBtn) addOptionBtn.disabled = true;
+          setSaveStatus("Guardando…", "saving");
+          api("dish_options", { method:"POST", headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
+            body: JSON.stringify({ product_id: p.id, name: name, sort_order: current.length + 1 }) })
+          .then(function(res){
+            if (addOptionBtn) addOptionBtn.disabled = false;
+            if (!res.ok || !res.data || !res.data.length){
+              setSaveStatus("No se pudo guardar la opción", "err");
+              toast("No se pudo agregar la opción. Revisa tu conexión.", true);
+              return;
+            }
+            var row = res.data[0];
+            if (!state.options[p.id]) state.options[p.id] = [];
+            state.options[p.id].push({ id: row.id, name: row.name, sort_order: row.sort_order });
+            newOptionInput.value = "";
+            renderExistingOptionTags(card, p);
+            var chipsEl = card.querySelector(".chips");
+            if (chipsEl) chipsEl.innerHTML = chipsHtml(p);
+            setSaveStatus("Guardado ✓ " + savedTime(), "ok");
+            toast("Opción «" + name + "» agregada a «" + p.name + "». Ya aparece en la carta.");
+            newOptionInput.focus();
+          }).catch(function(){
+            if (addOptionBtn) addOptionBtn.disabled = false;
+            setSaveStatus("No se pudo guardar la opción", "err");
+            toast("No se pudo agregar la opción. Revisa tu conexión.", true);
+          });
+        }
+        if (addOptionBtn) addOptionBtn.addEventListener("click", doAddOption);
+        if (newOptionInput) newOptionInput.addEventListener("keydown", function(ev){ if (ev.key === "Enter"){ ev.preventDefault(); doAddOption(); } });
         var avail = field(card, "available");
         avail.addEventListener("change", function(){
           var val = avail.checked;
@@ -2314,6 +2462,11 @@ alter table orders add column if not exists pagado boolean not null default fals
         card.querySelector("[data-del-no]").addEventListener("click", function(){ confirmBox.className = "confirm-del"; });
         card.querySelector("[data-del-yes]").addEventListener("click", function(){
           var btn = this; btn.disabled = true;
+          // Las opciones del plato se borran con él (también las quita la
+          // base de datos sola, pero aquí se borran explícitamente; si esta
+          // limpieza falla, el borrado del plato sigue igual).
+          try { api("dish_options?product_id=eq." + encodeURIComponent(p.id), { method:"DELETE" }).catch(function(){}); } catch(e){}
+          delete state.options[p.id];
           api("products?id=eq." + p.id, { method:"DELETE", headers:{ "Prefer":"return=representation" } })
           .then(function(res){
             btn.disabled = false;
@@ -2720,6 +2873,7 @@ alter table orders add column if not exists pagado boolean not null default fals
 
       // ---------- formulario: plato nuevo ----------
       renderNewCreams();
+      renderNewOptions();
       fillCategorySelect($("nCategoria"), "Broaster");
       $("nCategoria").addEventListener("change", function(){
         var show = this.value === "__nueva__";
@@ -2728,6 +2882,8 @@ alter table orders add column if not exists pagado boolean not null default fals
       });
       if ($("btnAddCremaNueva")) $("btnAddCremaNueva").addEventListener("click", addNewCreamFromInput);
       if ($("nNuevaCrema")) $("nNuevaCrema").addEventListener("keydown", function(ev){ if (ev.key === "Enter"){ ev.preventDefault(); addNewCreamFromInput(); } });
+      if ($("btnAddOpcionNueva")) $("btnAddOpcionNueva").addEventListener("click", addNewOptionFromInput);
+      if ($("nNuevaOpcion")) $("nNuevaOpcion").addEventListener("keydown", function(ev){ if (ev.key === "Enter"){ ev.preventDefault(); addNewOptionFromInput(); } });
       var newPhotoFile = null;
       linkToggles($("nEnsalada"), $("nSoloPapas"));
       $("nFotoFile").addEventListener("change", function(){
@@ -2778,23 +2934,33 @@ alter table orders add column if not exists pagado boolean not null default fals
             return null;
           }
           var created = res.data[0];
-          if (isDrink(created)) return { created: created, modsOk: true };
+          if (isDrink(created)) return { created: created, modsOk: true, optsOk: true };
           var names = buildModifiers(newCreams.slice(), {
             arroz: $("nArroz").checked,
             ensalada: $("nEnsalada").checked,
             soloPapas: $("nSoloPapas").checked
           });
-          if (!names.length) return { created: created, modsOk: true };
-          return api("modifiers", { method:"POST", headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
-            body: JSON.stringify(names.map(function(n){ return { product_id: created.id, name: n, price_cents: 0 }; })) })
-            .then(function(mres){ return { created: created, modsOk: mres.ok }; });
+          var modsChain = names.length
+            ? api("modifiers", { method:"POST", headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
+                body: JSON.stringify(names.map(function(n){ return { product_id: created.id, name: n, price_cents: 0 }; })) })
+                .then(function(mres){ return mres.ok; })
+            : Promise.resolve(true);
+          return modsChain.then(function(modsOk){
+            if (!newOptions.length) return { created: created, modsOk: modsOk, optsOk: true };
+            return api("dish_options", { method:"POST", headers:{ "Content-Type":"application/json", "Prefer":"return=representation" },
+              body: JSON.stringify(newOptions.map(function(n, i){ return { product_id: created.id, name: n, sort_order: i + 1 }; })) })
+              .then(function(ores){ return { created: created, modsOk: modsOk, optsOk: ores.ok }; })
+              .catch(function(){ return { created: created, modsOk: modsOk, optsOk: false }; });
+          });
         }).then(function(out){
           btn.disabled = false; btn.textContent = "Guardar plato y publicarlo en la carta";
           if (!out) return;
-          if (out.modsOk){
+          if (out.modsOk && out.optsOk){
             toast("¡Listo! «" + out.created.name + "» ya aparece en la carta de los clientes.");
-          } else {
+          } else if (!out.modsOk) {
             toast("El plato se guardó, pero sus cremas no: completa la sección 7 · Activación y edítalas luego.", true);
+          } else {
+            toast("El plato se guardó, pero sus opciones no: agrégalas luego en el editor del plato, parte 5 · Opciones.", true);
           }
           $("formNuevo").reset();
           fillCategorySelect($("nCategoria"), "Broaster");
@@ -2803,6 +2969,9 @@ alter table orders add column if not exists pagado boolean not null default fals
           newCreams = CREAMS.slice();
           renderNewCreams();
           if ($("nNuevaCrema")) $("nNuevaCrema").value = "";
+          newOptions = [];
+          renderNewOptions();
+          if ($("nNuevaOpcion")) $("nNuevaOpcion").value = "";
           $("nFotoPreview").style.display = "none";
           $("nFotoEstado").textContent = "";
           newPhotoFile = null;
@@ -3984,7 +4153,7 @@ alter table orders add column if not exists pagado boolean not null default fals
             if (creams.length) detail.push("Cremas: " + creams.join(", "));
             else detail.push("Sin cremas");
             if (extras.length) detail.push(extras.join(" · "));
-            return '<div class="piz-item"><div class="pline">' + esc(it.qty) + " × " + esc(it.product_name || "Producto") + " — " + money(Number(it.qty||0) * Number(it.unit_price_cents||0)) + '</div><div class="pmods">' + esc(detail.join(" · ")) + "</div>" + (it.notes ? '<div class="pnote">Nota: ' + esc(it.notes) + "</div>" : "") + "</div>";
+            return '<div class="piz-item"><div class="pline">' + esc(it.qty) + " × " + esc(it.product_name || "Producto") + " — " + money(Number(it.qty||0) * Number(it.unit_price_cents||0)) + '</div><div class="pmods">' + esc(detail.join(" · ")) + "</div>" + (it.notes ? '<div class="pnote">' + esc(it.notes) + "</div>" : "") + "</div>";
           }).join("");
           if (!itemsHtml) itemsHtml = '<div class="piz-item"><div class="pmods">Sin detalle de productos.</div></div>';
           card.innerHTML =
@@ -4358,7 +4527,11 @@ alter table orders add column if not exists pagado boolean not null default fals
           (carta.modifiers || []).forEach(function(m){
             (state.modifiers[m.product_id] = state.modifiers[m.product_id] || []).push(m.name);
           });
-          lastCartaFp = JSON.stringify({ products: carta.products, modifiers: carta.modifiers || [] });
+          state.options = {};
+          (carta.options || []).forEach(function(op){
+            (state.options[op.product_id] = state.options[op.product_id] || []).push({ id: op.id, name: op.name, sort_order: op.sort_order });
+          });
+          lastCartaFp = JSON.stringify({ products: carta.products, modifiers: carta.modifiers || [], options: carta.options || [] });
           $("connDot").className = "dot on";
           $("connTxt").textContent = "Conectado · tu carta está en vivo";
           $("connSub").textContent = state.products.length + " platos · Mostrando lo guardado · actualizando…";
