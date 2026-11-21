@@ -494,11 +494,11 @@
       .piz-pager .btn.next:hover{background:#0d47a1}
       .piz-pager .btn:disabled{opacity:.38;cursor:not-allowed}
       @media (max-width:560px){ .piz-pager .btn{min-width:0;flex:1} .piz-pager .piz-page-info{flex-basis:100%;order:-1} }
-      /* Pantalla completa: de la voz solo queda el botón «Voz: activada / apagada»;
-         se esconden «Probar voz», el selector de voz y los textos de ayuda */
-      body.tv #btnVoiceTest,
-      body.tv #sec-pizarra .piz-voice .hint,
-      body.tv #sec-pizarra .piz-voice-pick{display:none}
+      /* Pantalla completa: de la voz solo queda el botón de la barra superior
+         («Voz: activada / apagada», #btnVoiceToggleTv); se esconde todo el bloque
+         de voz del cuerpo de la Pizarra — botón duplicado (#btnVoiceToggle),
+         «Probar voz», el selector de voz y los textos de ayuda — */
+      body.tv #sec-pizarra .piz-voice{display:none}
       /* Botón y cuadro de presas (stock) en pantalla completa */
       #btnPresas{background:#e8590c;border-color:#e8590c;color:#fff;font-weight:800}
       #btnPresas:hover{background:#d9480f;border-color:#d9480f}
