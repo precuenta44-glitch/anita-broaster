@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/png" sizes="512x512" href="icon-panel-512.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-panel-192.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon.png" />
     <link rel="shortcut icon" type="image/png" href="favicon.png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="manifest" href="manifest.json" />
+    <link rel="manifest" href="manifest.json"> />
     <meta name="theme-color" content="#d81f26" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -600,7 +600,22 @@
             <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="btnBizCloseYes" style="background:var(--danger);color:#fff;border-color:var(--danger)">Sí, cerrar y poner stock en 0</button><button class="btn ghost" type="button" id="btnBizCloseNo">Cancelar</button></div>
           </div>
         </div>
-        <div class="global-card" id="globalCreamsCard" hidden>
+        <div class="global-card" id="catQuickCard">
+          <h3>Categorías de la carta</h3>
+          <p class="hint" style="margin:0 0 12px">Crea aquí mismo las categorías que quieras — «Platos», «Combos», «Adicionales», las que sean — sin salir de esta sección. Cada categoría es un <strong>grupo de la carta</strong>: al crearla aparece su grupo en la lista de abajo, listo para recibir platos con el botón <strong>«＋ Plato aquí»</strong> de su título. Y con <strong>«↑ Subir categoría»</strong> y <strong>«↓ Bajar categoría»</strong> eliges <strong>en qué parte de la carta va cada categoría</strong>: la carta de los clientes la muestra exactamente en esa posición, con todos sus platos dentro.</p>
+          <div class="cream-add-row">
+            <input type="text" id="nuevaCategoriaPlatos" maxlength="30" placeholder="Nombre de la categoría nueva. Ej.: Combos" aria-label="Nombre de la categoría nueva" />
+            <button class="btn" type="button" id="btnAddCategoriaPlatos">Agregar categoría</button>
+          </div>
+          <p class="hint">Las categorías también se administran en la sección «6 · Categorías» (crear, renombrar y ordenar). Las bebidas van aparte, en su propia sección de la carta.</p>
+        </div>
+        <div id="listaPlatos"><div class="empty">Cargando tu carta…</div></div>
+        <!-- Grupo «Cremas»: fijo en el HTML, justo después de la lista de platos.
+             NO vive dentro de #listaPlatos ni se mueve con JavaScript: la lista
+             se repinta seguido (innerHTML) y cualquier repintado interrumpido
+             dejaba esta tarjeta fuera de la página hasta recargar. -->
+        <div class="creams-group-head"><h3>Cremas</h3><span>Cremas y ensalada de todos los platos</span></div>
+        <div class="global-card" id="globalCreamsCard">
           <h3>Cremas y ensalada de TODOS los platos</h3>
           <p class="hint" style="margin:0 0 12px">¿Se acabó una crema o llegó más? Aquí la quitas <strong>de todos los platos de comida a la vez</strong>, o la agregas <strong>eligiendo a qué platos ponérsela</strong> (las bebidas no se tocan). Quitarla de todos no la borra para siempre: la puedes volver a agregar cuando quieras con el campo de abajo. Las cremas de un solo plato se siguen editando en su editor, parte 4.</p>
           <div id="globalCreamsList"><div class="empty">Cargando cremas…</div></div>
@@ -626,16 +641,6 @@
             </div>
           </div>
         </div>
-        <div class="global-card" id="catQuickCard">
-          <h3>Categorías de la carta</h3>
-          <p class="hint" style="margin:0 0 12px">Crea aquí mismo las categorías que quieras — «Platos», «Combos», «Adicionales», las que sean — sin salir de esta sección. Cada categoría es un <strong>grupo de la carta</strong>: al crearla aparece su grupo en la lista de abajo, listo para recibir platos con el botón <strong>«＋ Plato aquí»</strong> de su título. Y con <strong>«↑ Subir categoría»</strong> y <strong>«↓ Bajar categoría»</strong> eliges <strong>en qué parte de la carta va cada categoría</strong>: la carta de los clientes la muestra exactamente en esa posición, con todos sus platos dentro.</p>
-          <div class="cream-add-row">
-            <input type="text" id="nuevaCategoriaPlatos" maxlength="30" placeholder="Nombre de la categoría nueva. Ej.: Combos" aria-label="Nombre de la categoría nueva" />
-            <button class="btn" type="button" id="btnAddCategoriaPlatos">Agregar categoría</button>
-          </div>
-          <p class="hint">Las categorías también se administran en la sección «6 · Categorías» (crear, renombrar y ordenar). Las bebidas van aparte, en su propia sección de la carta.</p>
-        </div>
-        <div id="listaPlatos"><div class="empty">Cargando tu carta…</div></div>
         <div class="sec-nav"><span class="spacer"></span><button class="btn" type="button" data-goto="sec-nuevo">Siguiente: 2 · Agregar plato →</button></div>
       </section>
 
@@ -1412,8 +1417,12 @@ alter table orders add column if not exists pagado boolean not null default fals
           });
           if (userIsTyping()){
             // Está escribiendo en un editor: los datos ya quedaron guardados,
-            // pero no se repinta para no borrarle lo que escribe. La huella no
-            // se marca, así la próxima carga sí pinta los cambios.
+            // pero no se repinta la lista de platos para no borrarle lo que
+            // escribe. La huella no se marca, así la próxima carga sí pinta
+            // los cambios. La lista de cremas globales SÍ se actualiza: solo
+            // repinta su propio interior y no toca ningún editor, así quitar
+            // o agregar una crema se refleja al momento siempre.
+            renderGlobalCreams();
             return;
           }
           lastCartaFp = fp;
@@ -1422,7 +1431,8 @@ alter table orders add column if not exists pagado boolean not null default fals
           $("connDot").className = "dot err";
           $("connTxt").textContent = "Sin conexión con la carta";
           $("connSub").textContent = "Revisa tu internet y pulsa «Actualizar ahora».";
-          placeCreamsGroup();
+          // La tarjeta de cremas es fija en el HTML: un fallo de conexión ya
+          // no puede hacerla desaparecer ni duplicar su título.
         });
       }
 
@@ -1870,10 +1880,10 @@ alter table orders add column if not exists pagado boolean not null default fals
       function renderList(){
         var box = $("listaPlatos");
         var dishes = state.products.filter(function(p){ return !isDrink(p); });
-        // La tarjeta de cremas vive dentro de esta lista (grupo «Cremas», al
-        // final): se rescata antes de limpiar para no borrarla ni perder sus botones.
-        var gcNode = $("globalCreamsCard");
-        if (gcNode && gcNode.parentNode === box) box.removeChild(gcNode);
+        // La tarjeta de cremas globales NO vive en esta lista: es fija en el
+        // HTML, después de #listaPlatos. Antes se movía el nodo dentro y fuera
+        // en cada repintado y a veces quedaba fuera de la página (había que
+        // recargar para que volviera). Aquí ya no se toca.
         box.innerHTML = "";
         var groups = [], byCat = {};
         dishes.forEach(function(p){
@@ -1889,7 +1899,6 @@ alter table orders add column if not exists pagado boolean not null default fals
         groups = sortCatRaws(groups);
         if (!groups.length){
           box.innerHTML = '<div class="empty">Todavía no hay platos en tu carta. Agrega el primero en la sección «2 · Agregar plato nuevo» (las bebidas van en «3 · Refrescos y gaseosas»).</div>';
-          placeCreamsGroup();
           return;
         }
         var withItems = groups.filter(function(g){ return (byCat[g] || []).length > 0; });
@@ -1929,9 +1938,8 @@ alter table orders add column if not exists pagado boolean not null default fals
             renderDishCard(box, p, idxInGroup, items.length);
           });
         });
-        // Al final de la lista, después de todas las categorías de comida y
-        // antes de Bebidas: el grupo «Cremas» con el gestor global de cremas.
-        placeCreamsGroup();
+        // El grupo «Cremas» va justo después de esta lista, fijo en el HTML:
+        // aquí no hay nada que colocar.
       }
 
       function renderDishCard(box, p, idxInGroup, groupSize){
@@ -3066,21 +3074,12 @@ alter table orders add column if not exists pagado boolean not null default fals
       });
 
       // ---------- cremas globales (todos los platos de comida) ----------
-      // El gestor vive como grupo «Cremas» al final de la lista de Mis platos:
-      // después de todas las categorías de comida y antes de Bebidas. NO es una
-      // categoría: no entra en desplegables, ni en la sección 6, ni en la carta.
-      // Se mueve el nodo (no se recrea) para conservar los botones ya conectados.
-      function placeCreamsGroup(){
-        var box = $("listaPlatos"), gc = $("globalCreamsCard");
-        if (!box || !gc) return;
-        if (gc.parentNode) gc.parentNode.removeChild(gc);
-        var head = document.createElement("div");
-        head.className = "creams-group-head";
-        head.innerHTML = "<h3>Cremas</h3><span>Cremas y ensalada de todos los platos</span>";
-        box.appendChild(head);
-        gc.hidden = false;
-        box.appendChild(gc);
-      }
+      // El gestor es el grupo «Cremas» fijo en el HTML, justo después de la
+      // lista de Mis platos (después de las categorías de comida y antes de
+      // Bebidas). NO es una categoría: no entra en desplegables, ni en la
+      // sección 6, ni en la carta. Su tarjeta nunca se mueve ni se recrea:
+      // solo se repinta su lista interna (#globalCreamsList), así ningún
+      // repintado de platos puede hacerla desaparecer.
       function foodProducts(){ return state.products.filter(function(p){ return !isDrink(p); }); }
       function renderGlobalCreams(){
         var box = $("globalCreamsList");
