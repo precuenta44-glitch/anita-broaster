@@ -264,6 +264,10 @@ a.wa{color:var(--green);font-weight:800}
       <div class="optTitle">Cremas <small>— elige todas las que quieras, o ninguna</small></div>
       <div class="chips" id="mCreams"></div>
     </div>
+    <div id="optionsBlock" style="display:none">
+      <div class="optTitle">Opciones <small>— elige una</small></div>
+      <div class="chips" id="mOptions"></div>
+    </div>
     <div id="saladBlock">
       <div class="optTitle">Ensalada</div>
       <div class="seg" id="mSalad">
@@ -314,6 +318,7 @@ otras:{label:"Otras zonas",fee:null}
 };
 var menu=LOCAL_MENU.slice(),drinks=LOCAL_DRINKS.slice(),cart=[];
 var MODS=null;
+var OPTS=null;
 var SETTINGS={};
 function isClosed(){var v=SETTINGS.negocio_abierto;if(v===false)return true;if(typeof v==="string")return v.trim().toLowerCase()==="false";return false}
 function yapeNumber(){var v=SETTINGS.yape_numero;return v==null?"":String(v).trim()}
@@ -391,6 +396,7 @@ var out=soldOut(it);
 var card=document.createElement("article");card.className="card"+(out?" out":"");
 var tg=[],dc=dishCreams(it),sm=dishSaladMode(it);
 if(dc.length)tg.push(dc.length+" cremas a elegir");
+if(it.options&&it.options.length)tg.push("Elige tu opción");
 if(sm==="choice")tg.push("Con / sin ensalada");
 else if(sm==="papas")tg.push("Solo papas");
 if(it.hasRice)tg.push("Con / sin arroz");
@@ -430,7 +436,7 @@ found.qty++;
 renderCart();
 if(btn){var old=btn.textContent;btn.textContent="✓ Agregado";setTimeout(function(){btn.textContent=old},1200)}
 }
-var cur=null,curQty=1,curCreams=[],curSalad="Con ensalada",curRice="Con arroz";
+var cur=null,curQty=1,curCreams=[],curOption="",curSalad="Con ensalada",curRice="Con arroz";
 function segWire(id,cb,attr){
 var el=document.getElementById(id);
 el.querySelectorAll("button").forEach(function(b){
@@ -442,7 +448,7 @@ b.classList.add("on");cb(b.getAttribute("data-v")||b.getAttribute("data-f")||b.g
 }
 function openModal(item){
 var sm=dishSaladMode(item);
-cur=item;curQty=1;curCreams=[];curSalad=sm==="choice"?"Con ensalada":(sm==="papas"?"Solo papas":"");curRice="Con arroz";
+cur=item;curQty=1;curCreams=[];curOption="";curSalad=sm==="choice"?"Con ensalada":(sm==="papas"?"Solo papas":"");curRice="Con arroz";
 document.getElementById("mName").textContent=item.name;
 document.getElementById("mPrice").textContent=money(item.price);
 var mStockEl=document.getElementById("mStock"),mStockN=itemStock(item);
@@ -461,6 +467,17 @@ var b=document.createElement("button");b.type="button";b.className="chip";b.text
 b.addEventListener("click",function(){var i=curCreams.indexOf(c);if(i>=0){curCreams.splice(i,1);b.classList.remove("on")}else{curCreams.push(c);b.classList.add("on")}});
 cc.appendChild(b);
 });
+var itemOpts=(item.options&&item.options.length)?item.options:[];
+document.getElementById("optionsBlock").style.display=itemOpts.length?"block":"none";
+var oc=document.getElementById("mOptions");oc.innerHTML="";
+itemOpts.forEach(function(o){
+var b=document.createElement("button");b.type="button";b.className="chip";b.textContent=o;
+b.addEventListener("click",function(){
+if(curOption===o){curOption="";b.classList.remove("on")}
+else{curOption=o;oc.querySelectorAll(".chip").forEach(function(x){x.classList.remove("on")});b.classList.add("on")}
+});
+oc.appendChild(b);
+});
 updateAddBtn();
 document.getElementById("modal").classList.add("open");
 }
@@ -473,7 +490,7 @@ document.getElementById("mClose").addEventListener("click",function(){document.g
 document.getElementById("modal").addEventListener("click",function(e){if(e.target===this)this.classList.remove("open")});
 document.getElementById("mAdd").addEventListener("click",function(){
 if(!cur)return;
-cart.push({productId:cur.id||null,name:cur.name,price:cur.price,qty:curQty,creams:curCreams.slice(),salad:curSalad,rice:cur.hasRice?curRice:null,note:document.getElementById("mNote").value.trim()});
+cart.push({productId:cur.id||null,name:cur.name,price:cur.price,qty:curQty,creams:curCreams.slice(),option:curOption,salad:curSalad,rice:cur.hasRice?curRice:null,note:document.getElementById("mNote").value.trim()});
 document.getElementById("modal").classList.remove("open");
 renderCart();
 });
@@ -598,6 +615,7 @@ function itemDetail(i){
 if(i.drink)return i.price>0?"Bebida":"Bebida · precio a confirmar por WhatsApp";
 var parts=[];
 parts.push("Cremas: "+(i.creams.length?i.creams.join(", "):"sin cremas"));
+if(i.option)parts.push("Opción: "+i.option);
 if(i.salad)parts.push(i.salad);
 if(i.rice)parts.push(i.rice);
 if(i.note)parts.push("Nota: "+i.note);
@@ -662,6 +680,7 @@ var pedidoLines=[];
 cart.forEach(function(i){
 pedidoLines.push("• "+i.qty+" × "+i.name+" — "+(i.price>0?money(i.price*i.qty):"a confirmar"));
 pedidoLines.push(" "+itemDetailWhatsapp(i));
+if(i.option)pedidoLines.push(" Opción: "+i.option);
 if(i.price<=0)hasAsk=true;
 });
 var notasLines=[];
@@ -711,6 +730,7 @@ function itemDetailLines(i){
 if(i.drink)return [i.price>0?"Bebida":"Bebida · precio a confirmar por WhatsApp"];
 var parts=[];
 parts.push("Cremas: "+(i.creams.length?i.creams.join(", "):"sin cremas"));
+if(i.option)parts.push("Opción: "+i.option);
 if(i.salad)parts.push(i.salad);
 if(i.rice)parts.push(i.rice);
 if(i.note)parts.push("Nota: "+i.note);
@@ -843,7 +863,8 @@ creams=creamsFromModNames(names);
 hasRice=hasModName(names,"Con arroz");
 saladMode=hasModName(names,"Solo papas")?"papas":(hasModName(names,"Con ensalada")?"choice":"none");
 }
-return{id:r.id||null,slug:local?local.slug:"",name:r.name||(local?local.name:"Plato"),price:price,img:img,desc:r.description||(local?local.desc:""),hasRice:hasRice,available:(r.available!=null?!!r.available:true),stock:(r.stock_quantity===undefined||r.stock_quantity===null)?null:Number(r.stock_quantity),sortOrder:r.sort_order!=null?Number(r.sort_order):(local&&local.sortOrder!=null?Number(local.sortOrder):99),creams:creams,saladMode:saladMode,category:category};
+var opts=(!drink&&OPTS&&r.id&&OPTS[r.id])?OPTS[r.id].slice():[];
+return{id:r.id||null,slug:local?local.slug:"",name:r.name||(local?local.name:"Plato"),price:price,img:img,desc:r.description||(local?local.desc:""),hasRice:hasRice,available:(r.available!=null?!!r.available:true),stock:(r.stock_quantity===undefined||r.stock_quantity===null)?null:Number(r.stock_quantity),sortOrder:r.sort_order!=null?Number(r.sort_order):(local&&local.sortOrder!=null?Number(local.sortOrder):99),creams:creams,saladMode:saladMode,category:category,options:opts};
 }
 function applySettings(){
 var closed=isClosed();
@@ -855,10 +876,10 @@ updateYapeHint();
 renderMenu();renderDrinks();renderCart();
 }
 var CACHE_KEY="anita_carta_cache_v2";
-var settingsSig="",menuSig="",lastProductRows=null,lastModRows=null;
+var settingsSig="",menuSig="",lastProductRows=null,lastModRows=null,lastOptRows=null;
 function saveCache(){
 try{
-var payload=JSON.stringify({settings:SETTINGS,products:lastProductRows,mods:lastModRows});
+var payload=JSON.stringify({settings:SETTINGS,products:lastProductRows,mods:lastModRows,opts:lastOptRows});
 try{localStorage.setItem(CACHE_KEY,payload)}
 catch(e){
 var slim=JSON.parse(payload);
@@ -874,8 +895,9 @@ var bySort=function(a,b){return(a.sortOrder-b.sortOrder)||(a.price-b.price)};
 if(food.length)menu=food.sort(bySort);
 drinks=dr.length?dr.sort(bySort):LOCAL_DRINKS.slice();
 }
-function applyProductRows(rows,mods){
+function applyProductRows(rows,mods,opts){
 if(mods){var map={};mods.forEach(function(m){(map[m.product_id]=map[m.product_id]||[]).push(m.name)});MODS=map}
+if(opts){var omap={};opts.slice().sort(function(a,b){return (Number(a.sort_order)||0)-(Number(b.sort_order)||0)}).forEach(function(o){if(o&&o.name!=null&&String(o.name).trim())(omap[o.product_id]=omap[o.product_id]||[]).push(String(o.name).trim())});OPTS=omap}
 if(rows&&rows.length)buildMenuFromRows(rows);
 }
 function hydrateFromCache(){
@@ -886,10 +908,11 @@ var data=JSON.parse(raw);
 var used=false;
 if(data.settings&&typeof data.settings==="object"){SETTINGS=data.settings;settingsSig=JSON.stringify(data.settings);used=true}
 if(data.mods)lastModRows=data.mods;
+if(data.opts)lastOptRows=data.opts;
 if(data.products&&data.products.length){
 lastProductRows=data.products;
-menuSig=JSON.stringify({p:data.products,m:data.mods||null});
-applyProductRows(data.products,data.mods);
+menuSig=JSON.stringify({p:data.products,m:data.mods||null,o:data.opts||null});
+applyProductRows(data.products,data.mods,data.opts);
 used=true;
 }
 if(used){applySettings();jumpToHashCategory()}
@@ -915,15 +938,18 @@ var pProducts=fetch(SUPA_URL+"/rest/v1/products?select=*&order=sort_order.asc",{
 var pMods=fetch(SUPA_URL+"/rest/v1/modifiers?select=product_id,name",{headers:supaHeaders(),cache:"no-store"})
 .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
 .catch(function(){return null});
-Promise.all([pProducts,pMods])
+var pOpts=fetch(SUPA_URL+"/rest/v1/dish_options?select=product_id,name,sort_order&order=sort_order.asc",{headers:supaHeaders(),cache:"no-store"})
+.then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
+.catch(function(){return null});
+Promise.all([pProducts,pMods,pOpts])
 .then(function(res){
 fetchBusy=false;failCount=0;
-var rows=res[0],mods=res[1];
-var sig=JSON.stringify({p:rows,m:mods});
+var rows=res[0],mods=res[1],opts=res[2];
+var sig=JSON.stringify({p:rows,m:mods,o:opts});
 if(sig!==menuSig){
 menuSig=sig;
-lastProductRows=rows;lastModRows=mods;
-applyProductRows(rows,mods);
+lastProductRows=rows;lastModRows=mods;lastOptRows=opts;
+applyProductRows(rows,mods,opts);
 renderMenu();
 renderDrinks();
 saveCache();
@@ -965,7 +991,7 @@ var oid=data&&data[0]&&data[0].id;
 if(!oid)throw new Error("orders");
 var rows=snapshot.map(function(i){
 var mods=i.drink?["Bebida"]:(i.creams.slice().concat(i.salad?[i.salad]:[]).concat(i.rice?[i.rice]:[]));
-return{order_id:oid,product_id:i.productId||null,product_name:i.name,qty:i.qty,unit_price_cents:Math.round(i.price*100),modifiers:mods,notes:(i.note||"")+(note?" | Nota general: "+note:"")};
+return{order_id:oid,product_id:i.productId||null,product_name:i.name,qty:i.qty,unit_price_cents:Math.round(i.price*100),modifiers:mods,notes:((i.option?"Opción: "+i.option:"")+(i.note?(i.option?" | ":"")+i.note:""))+(note?" | Nota general: "+note:"")};
 });
 return fetch(SUPA_URL+"/rest/v1/order_items",{method:"POST",headers:supaHeaders({"Content-Type":"application/json","Prefer":"return=minimal"}),body:JSON.stringify(rows)})
 .then(function(r3){if(!r3.ok)throw new Error("items")});
