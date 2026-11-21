@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon.png"/>
 <link rel="shortcut icon" type="image/png" href="assets/favicon.png"/>
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
-<link rel="manifest" href="assets/manifest.json"/>
+<link rel="manifest" href="assets/manifest.json">/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -321,6 +321,30 @@ function qrImageSrc(){var v=SETTINGS.qr_image;return (typeof v==="string"&&v.ind
 function whatsappEstilo(){var v=SETTINGS.whatsapp_estilo;if(v==null)return "actual";var s=String(v).trim().toLowerCase();if(s==="corto"||s==="detallado"||s==="sin_emojis"||s==="actual")return s;return "actual"}
 var payMethod="efectivo";
 function dishCreams(it){return it.creams?it.creams:CREAMS}
+var SPECIAL_MODS=["con arroz","sin arroz","con ensalada","sin ensalada","solo papas","sin cremas"];
+function normModName(s){return String(s==null?"":s).trim().replace(/\s+/g," ")}
+function creamsFromModNames(names){
+var seen={},found=[];
+names.forEach(function(n){
+var t=normModName(n);if(!t)return;
+var k=t.toLowerCase();
+if(SPECIAL_MODS.indexOf(k)>=0||seen[k])return;
+seen[k]=1;found.push(t);
+});
+var ordered=[];
+CREAMS.forEach(function(c){
+var k=c.toLowerCase();
+for(var i=0;i<found.length;i++){
+if(found[i].toLowerCase()===k){ordered.push(found[i]);found.splice(i,1);break}
+}
+});
+return ordered.concat(found);
+}
+function hasModName(names,target){
+var t=target.toLowerCase();
+for(var i=0;i<names.length;i++){if(normModName(names[i]).toLowerCase()===t)return true}
+return false;
+}
 function dishSaladMode(it){return it.saladMode||"choice"}
 function itemStock(it){return (it.stock===undefined||it.stock===null)?null:Number(it.stock)}
 function stockTag(it){
@@ -753,7 +777,7 @@ var name=document.getElementById("custName").value.trim();
 var extra=document.getElementById("custExtra").value.trim();
 var note=document.getElementById("custNote").value.trim();
 var lines=buildWhatsappLines(name,extra,note);
-var waUrl="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(lines.join("\n"));
+var waUrl="https://api.whatsapp.com/send?phone="+WHATSAPP+"&text="+encodeURIComponent(lines.join("\n"));
 var btn=document.getElementById("sendBtn");
 btn.disabled=true;
 btn.textContent="Confirmando tu pedido…";
@@ -815,9 +839,9 @@ var category=catText||(local&&local.category?String(local.category).trim():"")||
 if(drink){creams=[];saladMode="none";hasRice=false}
 var names=(!drink&&MODS&&r.id)?MODS[r.id]:null;
 if(names&&names.length){
-creams=CREAMS.filter(function(c){return names.indexOf(c)>=0});
-hasRice=names.indexOf("Con arroz")>=0;
-saladMode=names.indexOf("Solo papas")>=0?"papas":(names.indexOf("Con ensalada")>=0?"choice":"none");
+creams=creamsFromModNames(names);
+hasRice=hasModName(names,"Con arroz");
+saladMode=hasModName(names,"Solo papas")?"papas":(hasModName(names,"Con ensalada")?"choice":"none");
 }
 return{id:r.id||null,slug:local?local.slug:"",name:r.name||(local?local.name:"Plato"),price:price,img:img,desc:r.description||(local?local.desc:""),hasRice:hasRice,available:(r.available!=null?!!r.available:true),stock:(r.stock_quantity===undefined||r.stock_quantity===null)?null:Number(r.stock_quantity),sortOrder:r.sort_order!=null?Number(r.sort_order):(local&&local.sortOrder!=null?Number(local.sortOrder):99),creams:creams,saladMode:saladMode,category:category};
 }
