@@ -516,6 +516,17 @@
       .presas-step{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit;font-size:1.3rem;font-weight:800;line-height:1;cursor:pointer}
       .presas-step:hover{border-color:#1565c0;color:#1565c0}
       .presas-step:disabled{opacity:.4;cursor:wait}
+      .presas-remove{width:30px;height:30px;flex:none;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--muted);font:inherit;font-size:1rem;font-weight:800;line-height:1;cursor:pointer;padding:0}
+      .presas-remove:hover{border-color:#c92a2a;color:#c92a2a;background:var(--surface2)}
+      .presas-add-btn{width:100%;margin-top:10px;background:#e8590c;border-color:#e8590c;color:#fff;font-weight:800}
+      .presas-add-btn:hover{background:#d9480f;border-color:#d9480f}
+      .presas-picker{margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+      .presas-picker input[type="text"]{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);color:var(--ink);font:inherit}
+      .presas-pick-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;background:var(--surface2);color:var(--ink);font:inherit;cursor:pointer}
+      .presas-pick-row:hover{border-color:#e8590c}
+      .presas-pick-row .pname{flex:1;font-weight:700;min-width:0}
+      .presas-pick-row .pstock{color:var(--muted);font-weight:700;font-size:.88rem;white-space:nowrap}
+      .presas-pick-row .padd{color:#e8590c;font-weight:800;font-size:.9rem;white-space:nowrap}
     </style>
   </head>
   <body>
@@ -1124,7 +1135,13 @@ alter table orders add column if not exists pagado boolean not null default fals
         <div class="presas-box" id="presasBox" role="dialog" aria-label="Presas que quedan">
           <div class="presas-head"><strong>🍗 Presas que quedan</strong><button class="btn ghost small" type="button" id="btnPresasClose" aria-label="Cerrar el cuadro de presas">✕</button></div>
           <div id="presasList"><div class="empty">Cargando…</div></div>
-          <p class="hint" style="margin:8px 0 0">El stock se descuenta solo con cada pedido nuevo. Con <strong>−</strong> y <strong>+</strong> lo ajustas aquí y la carta se actualiza al momento.</p>
+          <button class="btn presas-add-btn" type="button" id="btnPresasAdd" aria-expanded="false" aria-controls="presasPicker">＋ Añadir plato o bebida</button>
+          <div class="presas-picker" id="presasPicker" hidden>
+            <input type="text" id="presasPickerSearch" maxlength="40" placeholder="Buscar plato o bebida…" aria-label="Buscar plato o bebida para añadir al cuadro" />
+            <div id="presasPickerList"></div>
+            <button class="btn ghost small" type="button" id="btnPresasPickerDone" style="margin-top:10px">Listo</button>
+          </div>
+          <p class="hint" style="margin:8px 0 0">El stock se descuenta solo con cada pedido nuevo. Con <strong>−</strong> y <strong>+</strong> lo ajustas aquí y la carta se actualiza al momento. Con la <strong>×</strong> quitas un plato o bebida solo de este cuadro (sigue en la carta), y con <strong>＋ Añadir</strong> pones los demás platos y bebidas de la carta. Lo que dejas en el cuadro queda guardado en este aparato.</p>
         </div>
         <button class="btn tv-open-btn" type="button" id="btnTvMode">📺 Pantalla completa</button>
         <div class="piz-voice" role="group" aria-label="Voz que lee los pedidos nuevos">
@@ -4121,24 +4138,98 @@ alter table orders add column if not exists pagado boolean not null default fals
       // Con − y + se ajusta a mano y se guarda en products.stock_quantity, así
       // la carta (que lee la misma base) muestra el nuevo «Quedan X» / AGOTADO.
       var presasOpen = false, presasFp = "", presasBusy = {};
+      // Qué platos y bebidas salen en el cuadro: la lista elegida se guarda en
+      // este aparato (localStorage). Si nunca se eligió, salen los platos de
+      // comida, como siempre. Quitar con la × es solo del cuadro: el plato o
+      // bebida sigue en la carta, no se borra nada del menú.
+      var PRESAS_IDS_KEY = "anita_panel_presas_ids";
+      var presasIdsSaved = null;
+      try {
+        var pIds0 = JSON.parse(window.localStorage.getItem(PRESAS_IDS_KEY) || "null");
+        if (Array.isArray(pIds0)) presasIdsSaved = pIds0.map(function(x){ return String(x); });
+      } catch(e){}
+      function savePresasIds(ids){
+        presasIdsSaved = ids.map(function(x){ return String(x); });
+        try { window.localStorage.setItem(PRESAS_IDS_KEY, JSON.stringify(presasIdsSaved)); } catch(e){}
+      }
+      function presasShownProducts(){
+        if (!presasIdsSaved) return foodProducts();
+        var byId = {};
+        state.products.forEach(function(p){ byId[String(p.id)] = p; });
+        var out = [];
+        presasIdsSaved.forEach(function(id){ if (byId[id]) out.push(byId[id]); });
+        return out;
+      }
+      function presasCurrentIds(){
+        return presasShownProducts().map(function(p){ return String(p.id); });
+      }
       function presasFingerprint(){
-        return foodProducts().map(function(p){ var s = stockOf(p); return p.id + ":" + (s === null ? "inf" : s); }).join("|");
+        return presasShownProducts().map(function(p){ var s = stockOf(p); return p.id + ":" + (s === null ? "inf" : s); }).join("|");
       }
       function renderPresas(){
         var list = $("presasList"); if (!list) return;
-        var dishes = foodProducts();
-        if (!dishes.length){ list.innerHTML = '<div class="empty">Todavía no hay platos en tu carta.</div>'; presasFp = ""; return; }
+        var dishes = presasShownProducts();
+        if (!dishes.length){ list.innerHTML = '<div class="empty">El cuadro está vacío. Toca «＋ Añadir plato o bebida» para poner los que quieras ver aquí.</div>'; presasFp = ""; return; }
         list.innerHTML = dishes.map(function(p){
           var s = stockOf(p);
           var name = '<span class="presas-name">' + esc(p.name) + (s === 0 ? '<span class="presas-agotado">AGOTADO</span>' : "") + "</span>";
-          if (s === null) return '<div class="presas-row">' + name + '<span class="presas-unlim">Ilimitado</span></div>';
+          var rm = '<button class="presas-remove" type="button" data-presas-remove="' + p.id + '" aria-label="Quitar ' + esc(p.name) + ' del cuadro" title="Quitar del cuadro (sigue en la carta)">✕</button>';
+          if (s === null) return '<div class="presas-row">' + name + '<span class="presas-unlim">Ilimitado</span>' + rm + '</div>';
           var dis = presasBusy[p.id] ? " disabled" : "";
           return '<div class="presas-row">' + name +
             '<button class="presas-step" type="button" data-presas="' + p.id + '" data-delta="-1" aria-label="Quitar 1 de ' + esc(p.name) + '"' + dis + '>−</button>' +
             '<span class="presas-qty' + (s === 0 ? " zero" : "") + '">' + s + "</span>" +
-            '<button class="presas-step" type="button" data-presas="' + p.id + '" data-delta="1" aria-label="Agregar 1 de ' + esc(p.name) + '"' + dis + '>+</button></div>';
+            '<button class="presas-step" type="button" data-presas="' + p.id + '" data-delta="1" aria-label="Agregar 1 de ' + esc(p.name) + '"' + dis + '>+</button>' + rm + '</div>';
         }).join("");
         presasFp = presasFingerprint();
+      }
+      // ---------- selector «＋ Añadir» del cuadro de presas ----------
+      function presasPickerIsOpen(){
+        var pk = $("presasPicker");
+        return !!(pk && !pk.hidden);
+      }
+      function setPresasPicker(open){
+        var pk = $("presasPicker"), btn = $("btnPresasAdd");
+        if (!pk) return;
+        pk.hidden = !open;
+        if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open){
+          var s = $("presasPickerSearch"); if (s) s.value = "";
+          renderPresasPicker();
+          if (s) s.focus();
+        }
+      }
+      function renderPresasPicker(){
+        var list = $("presasPickerList"); if (!list) return;
+        var q = ($("presasPickerSearch") ? $("presasPickerSearch").value : "").toLowerCase().trim();
+        var shownIds = {};
+        presasShownProducts().forEach(function(p){ shownIds[String(p.id)] = true; });
+        var avail = state.products.filter(function(p){ return !shownIds[String(p.id)]; });
+        if (!avail.length){ list.innerHTML = '<div class="empty">Ya están todos los platos y bebidas de la carta en el cuadro.</div>'; return; }
+        var html = "", shown = 0;
+        avail.forEach(function(p){
+          var nm = String(p.name || "");
+          if (q && nm.toLowerCase().indexOf(q) < 0) return;
+          shown++;
+          var s = stockOf(p);
+          var st = s === null ? "Ilimitado" : (s === 0 ? "AGOTADO" : "Quedan " + s);
+          html += '<button class="presas-pick-row" type="button" data-presas-add="' + p.id + '" aria-label="Añadir ' + esc(nm) + ' al cuadro"><span class="pname">' + esc(nm) + '</span><span class="pstock">' + st + '</span><span class="padd">＋ Añadir</span></button>';
+        });
+        list.innerHTML = shown ? html : '<div class="empty">Ningún plato o bebida coincide con la búsqueda.</div>';
+      }
+      function addPresaToBox(id){
+        var ids = presasCurrentIds();
+        if (ids.indexOf(String(id)) >= 0) return;
+        ids.push(String(id));
+        savePresasIds(ids);
+        renderPresas();
+        renderPresasPicker();
+      }
+      function removePresaFromBox(id){
+        var ids = presasCurrentIds().filter(function(x){ return x !== String(id); });
+        savePresasIds(ids);
+        renderPresas();
+        if (presasPickerIsOpen()) renderPresasPicker();
       }
       function refreshPresas(){
         return api("products?select=id,stock_quantity").then(function(res){
@@ -4157,6 +4248,7 @@ alter table orders add column if not exists pagado boolean not null default fals
         if (box) box.classList.toggle("open", presasOpen);
         if (btn) btn.setAttribute("aria-expanded", presasOpen ? "true" : "false");
         if (presasOpen){ renderPresas(); refreshPresas(); }
+        else setPresasPicker(false);
       }
       function changePresaStock(id, delta){
         var p = null;
@@ -4189,9 +4281,19 @@ alter table orders add column if not exists pagado boolean not null default fals
       if ($("btnPresas")) $("btnPresas").addEventListener("click", function(){ setPresasOpen(!presasOpen); });
       if ($("btnPresasClose")) $("btnPresasClose").addEventListener("click", function(){ setPresasOpen(false); });
       if ($("presasList")) $("presasList").addEventListener("click", function(ev){
+        var rm = ev.target && ev.target.closest ? ev.target.closest("[data-presas-remove]") : null;
+        if (rm){ removePresaFromBox(rm.getAttribute("data-presas-remove")); return; }
         var b = ev.target && ev.target.closest ? ev.target.closest("[data-presas]") : null;
         if (!b || b.disabled) return;
         changePresaStock(b.getAttribute("data-presas"), parseInt(b.getAttribute("data-delta"), 10) || 0);
+      });
+      if ($("btnPresasAdd")) $("btnPresasAdd").addEventListener("click", function(){ setPresasPicker(!presasPickerIsOpen()); });
+      if ($("btnPresasPickerDone")) $("btnPresasPickerDone").addEventListener("click", function(){ setPresasPicker(false); });
+      if ($("presasPickerSearch")) $("presasPickerSearch").addEventListener("input", renderPresasPicker);
+      if ($("presasPickerList")) $("presasPickerList").addEventListener("click", function(ev){
+        var b = ev.target && ev.target.closest ? ev.target.closest("[data-presas-add]") : null;
+        if (!b) return;
+        addPresaToBox(b.getAttribute("data-presas-add"));
       });
 
       // ---------- secciones por pestañas: una sola visible a la vez ----------
