@@ -494,6 +494,28 @@
       .piz-pager .btn.next:hover{background:#0d47a1}
       .piz-pager .btn:disabled{opacity:.38;cursor:not-allowed}
       @media (max-width:560px){ .piz-pager .btn{min-width:0;flex:1} .piz-pager .piz-page-info{flex-basis:100%;order:-1} }
+      /* Pantalla completa: de la voz solo queda el botón «Voz: activada / apagada»;
+         se esconden «Probar voz», el selector de voz y los textos de ayuda */
+      body.tv #btnVoiceTest,
+      body.tv #sec-pizarra .piz-voice .hint,
+      body.tv #sec-pizarra .piz-voice-pick{display:none}
+      /* Botón y cuadro de presas (stock) en pantalla completa */
+      #btnPresas{background:#e8590c;border-color:#e8590c;color:#fff;font-weight:800}
+      #btnPresas:hover{background:#d9480f;border-color:#d9480f}
+      .presas-box{display:none}
+      body.tv .presas-box.open{display:block;position:fixed;top:72px;right:12px;width:min(330px,94vw);max-height:calc(100vh - 92px);overflow-y:auto;background:var(--surface);color:var(--ink);border:2px solid #1565c0;border-radius:14px;padding:12px 14px;z-index:80;box-shadow:0 14px 34px rgba(0,0,0,.5)}
+      .presas-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+      .presas-head strong{font-family:"Bricolage Grotesque",sans-serif;font-size:1.15rem}
+      .presas-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line)}
+      .presas-row:last-of-type{border-bottom:none}
+      .presas-name{flex:1;font-weight:700;line-height:1.25;min-width:0}
+      .presas-agotado{display:block;color:#c92a2a;font-weight:800;font-size:.78rem;letter-spacing:.02em}
+      .presas-qty{font-weight:800;font-size:1.25rem;min-width:2.2ch;text-align:center}
+      .presas-qty.zero{color:#c92a2a}
+      .presas-unlim{color:var(--muted);font-weight:700;font-size:.95rem}
+      .presas-step{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit;font-size:1.3rem;font-weight:800;line-height:1;cursor:pointer}
+      .presas-step:hover{border-color:#1565c0;color:#1565c0}
+      .presas-step:disabled{opacity:.4;cursor:wait}
     </style>
   </head>
   <body>
@@ -1096,7 +1118,13 @@ alter table orders add column if not exists pagado boolean not null default fals
         <div class="tv-bar" id="tvBar">
           <div class="tv-title">Pizarra de pedidos · Anita Broaster</div>
           <button class="btn voice-off" type="button" id="btnVoiceToggleTv" aria-pressed="false">🔇 Voz: apagada</button>
+          <button class="btn" type="button" id="btnPresas" aria-expanded="false" aria-controls="presasBox">🍗 Presas</button>
           <button class="btn" type="button" id="btnTvExit">Salir ✕</button>
+        </div>
+        <div class="presas-box" id="presasBox" role="dialog" aria-label="Presas que quedan">
+          <div class="presas-head"><strong>🍗 Presas que quedan</strong><button class="btn ghost small" type="button" id="btnPresasClose" aria-label="Cerrar el cuadro de presas">✕</button></div>
+          <div id="presasList"><div class="empty">Cargando…</div></div>
+          <p class="hint" style="margin:8px 0 0">El stock se descuenta solo con cada pedido nuevo. Con <strong>−</strong> y <strong>+</strong> lo ajustas aquí y la carta se actualiza al momento.</p>
         </div>
         <button class="btn tv-open-btn" type="button" id="btnTvMode">📺 Pantalla completa</button>
         <div class="piz-voice" role="group" aria-label="Voz que lee los pedidos nuevos">
@@ -3828,7 +3856,7 @@ alter table orders add column if not exists pagado boolean not null default fals
             if (!all.length){
               cacheSet("pizarra", { pend: [], del: [], unpaid: [], byOrder: {} });
               vozLastPend = pend; vozDetect(pend, {});
-              var fpVacia = JSON.stringify([pizFilter, [], {}]);
+              var fpVacia = JSON.stringify([pizFilter, [], {}, document.body.classList.contains("tv")]);
               if (fpVacia !== lastPizFp){ lastPizFp = fpVacia; renderPizarra([], {}); }
               $("pizEstado").textContent = "Sin pedidos por mostrar.";
               return;
@@ -3844,7 +3872,9 @@ alter table orders add column if not exists pagado boolean not null default fals
               else if (pizFilter === "entregados") list = del;
               else if (pizFilter === "faltan") list = pizUnpaidList;
               else list = pend.concat(del).sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
-              var fp = JSON.stringify([pizFilter, list, byOrder]);
+              // La huella incluye si está en pantalla completa: al entrar o salir
+              // del modo TV hay que repintar sí o sí (las tarjetas se arman distinto).
+              var fp = JSON.stringify([pizFilter, list, byOrder, document.body.classList.contains("tv")]);
               if (fp !== lastPizFp || Date.now() - lastPizRenderAt > 60000){ lastPizFp = fp; lastPizRenderAt = Date.now(); renderPizarra(list, byOrder); }
               $("pizEstado").textContent = "Actualizado " + new Date().toLocaleTimeString("es-PE", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
             });
@@ -4044,13 +4074,17 @@ alter table orders add column if not exists pagado boolean not null default fals
         if (ev.key === "ArrowRight" && $("btnPizNext") && !$("btnPizNext").disabled) $("btnPizNext").click();
         if (ev.key === "ArrowLeft" && $("btnPizPrev") && !$("btnPizPrev").disabled) $("btnPizPrev").click();
       });
-      setInterval(function(){ loadPizarra(); }, 15000);
+      setInterval(function(){ loadPizarra(); if (presasOpen) refreshPresas(); }, 15000);
 
       // ---------- pizarra en pantalla completa (modo cocina / TV) ----------
       function enterTv(){
         pizPage = 0;
         document.body.classList.add("tv");
         showTab("sec-pizarra", false);
+        // Repinta al momento ya en modo TV. Sin esto, las tarjetas pintadas en
+        // la pizarra normal se quedan con los botones en línea y sin el botón
+        // «Acciones», porque la carga de pedidos no repinta si nada cambió.
+        if (pizLastList) renderPizarra(pizLastList, pizLastByOrder);
         window.scrollTo(0, 0);
         try {
           var el = document.documentElement;
@@ -4062,6 +4096,7 @@ alter table orders add column if not exists pagado boolean not null default fals
         loadPizarra();
       }
       function exitTv(){
+        setPresasOpen(false);
         document.body.classList.remove("tv");
         if (pizLastList) renderPizarra(pizLastList, pizLastByOrder);
         try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); } catch(e){}
@@ -4073,9 +4108,90 @@ alter table orders add column if not exists pagado boolean not null default fals
       if ($("btnTvExit")) $("btnTvExit").addEventListener("click", exitTv);
       document.addEventListener("fullscreenchange", function(){
         if (!document.fullscreenElement && document.body.classList.contains("tv")){
+          setPresasOpen(false);
           document.body.classList.remove("tv");
           if (pizLastList) renderPizarra(pizLastList, pizLastByOrder);
         }
+      });
+
+      // ---------- cuadro de presas (stock) en pantalla completa ----------
+      // Como el cuadro de su pizarra blanca: cuántas presas quedan de cada
+      // plato. El stock ya se descuenta solo en la base con cada pedido; aquí
+      // se trae fresco cada 15 s mientras el cuadro está abierto, sin cerrarlo.
+      // Con − y + se ajusta a mano y se guarda en products.stock_quantity, así
+      // la carta (que lee la misma base) muestra el nuevo «Quedan X» / AGOTADO.
+      var presasOpen = false, presasFp = "", presasBusy = {};
+      function presasFingerprint(){
+        return foodProducts().map(function(p){ var s = stockOf(p); return p.id + ":" + (s === null ? "inf" : s); }).join("|");
+      }
+      function renderPresas(){
+        var list = $("presasList"); if (!list) return;
+        var dishes = foodProducts();
+        if (!dishes.length){ list.innerHTML = '<div class="empty">Todavía no hay platos en tu carta.</div>'; presasFp = ""; return; }
+        list.innerHTML = dishes.map(function(p){
+          var s = stockOf(p);
+          var name = '<span class="presas-name">' + esc(p.name) + (s === 0 ? '<span class="presas-agotado">AGOTADO</span>' : "") + "</span>";
+          if (s === null) return '<div class="presas-row">' + name + '<span class="presas-unlim">Ilimitado</span></div>';
+          var dis = presasBusy[p.id] ? " disabled" : "";
+          return '<div class="presas-row">' + name +
+            '<button class="presas-step" type="button" data-presas="' + p.id + '" data-delta="-1" aria-label="Quitar 1 de ' + esc(p.name) + '"' + dis + '>−</button>' +
+            '<span class="presas-qty' + (s === 0 ? " zero" : "") + '">' + s + "</span>" +
+            '<button class="presas-step" type="button" data-presas="' + p.id + '" data-delta="1" aria-label="Agregar 1 de ' + esc(p.name) + '"' + dis + '>+</button></div>';
+        }).join("");
+        presasFp = presasFingerprint();
+      }
+      function refreshPresas(){
+        return api("products?select=id,stock_quantity").then(function(res){
+          if (!res || !res.ok || !res.data) return;
+          var byId = {};
+          res.data.forEach(function(r){ byId[r.id] = r.stock_quantity; });
+          state.products.forEach(function(p){
+            if (Object.prototype.hasOwnProperty.call(byId, p.id)) p.stock_quantity = byId[p.id];
+          });
+          if (presasOpen && presasFingerprint() !== presasFp) renderPresas();
+        }).catch(function(){});
+      }
+      function setPresasOpen(open){
+        presasOpen = !!open;
+        var box = $("presasBox"), btn = $("btnPresas");
+        if (box) box.classList.toggle("open", presasOpen);
+        if (btn) btn.setAttribute("aria-expanded", presasOpen ? "true" : "false");
+        if (presasOpen){ renderPresas(); refreshPresas(); }
+      }
+      function changePresaStock(id, delta){
+        var p = null;
+        state.products.forEach(function(x){ if (String(x.id) === String(id)) p = x; });
+        if (!p || presasBusy[p.id]) return;
+        var cur = stockOf(p);
+        if (cur === null) return;
+        var next = Math.max(0, cur + delta);
+        if (next === cur) return;
+        presasBusy[p.id] = true;
+        p.stock_quantity = next; // se ve al momento; si el guardado falla, se revierte
+        renderPresas();
+        var payload = { stock_quantity: next };
+        if (next === 0) payload.available = false;       // igual que al acabarse con un pedido
+        if (cur === 0 && next > 0) payload.available = true;
+        patchProduct(p.id, payload).then(function(res){
+          delete presasBusy[p.id];
+          if (!res || !res.ok){
+            p.stock_quantity = cur;
+            toast("No se pudo guardar el stock de " + p.name + ". Revisa tu conexión.", true);
+          }
+          renderPresas();
+        }).catch(function(){
+          delete presasBusy[p.id];
+          p.stock_quantity = cur;
+          renderPresas();
+          toast("No se pudo guardar el stock de " + p.name + ". Revisa tu conexión.", true);
+        });
+      }
+      if ($("btnPresas")) $("btnPresas").addEventListener("click", function(){ setPresasOpen(!presasOpen); });
+      if ($("btnPresasClose")) $("btnPresasClose").addEventListener("click", function(){ setPresasOpen(false); });
+      if ($("presasList")) $("presasList").addEventListener("click", function(ev){
+        var b = ev.target && ev.target.closest ? ev.target.closest("[data-presas]") : null;
+        if (!b || b.disabled) return;
+        changePresaStock(b.getAttribute("data-presas"), parseInt(b.getAttribute("data-delta"), 10) || 0);
       });
 
       // ---------- secciones por pestañas: una sola visible a la vez ----------
@@ -4142,7 +4258,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           else if (pizFilter === "entregados") list = del;
           else if (pizFilter === "faltan") list = unpaid;
           else list = pend.concat(del).sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
-          lastPizFp = JSON.stringify([pizFilter, list, byOrder]);
+          lastPizFp = JSON.stringify([pizFilter, list, byOrder, false]);
           lastPizRenderAt = Date.now();
           try { renderPizarra(list, byOrder); } catch(e){}
           $("pizEstado").textContent = "Mostrando los pedidos guardados · actualizando…";

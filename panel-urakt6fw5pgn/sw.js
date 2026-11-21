@@ -3,7 +3,7 @@
 // sirven AL INSTANTE desde la caché del teléfono y se actualizan en segundo
 // plano con la red. Los datos (Supabase) NUNCA pasan por esta caché: van
 // siempre en vivo por la red y el panel los guarda aparte en localStorage.
-var CACHE = "anita-panel-v2";
+var CACHE = "anita-panel-v3";
 var CORE = [
   "../index.html",
   "./",
