@@ -854,7 +854,7 @@ document.getElementById("qrImg").src=qrImageSrc();
 updateYapeHint();
 renderMenu();renderDrinks();renderCart();
 }
-var CACHE_KEY="anita_carta_cache_v1";
+var CACHE_KEY="anita_carta_cache_v2";
 var settingsSig="",menuSig="",lastProductRows=null,lastModRows=null;
 function saveCache(){
 try{
@@ -980,8 +980,16 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden)fetc
 </script>
 <script>
 if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)){
+var swHadController=!!navigator.serviceWorker.controller,swReloaded=false;
+navigator.serviceWorker.addEventListener("controllerchange",function(){
+if(!swHadController||swReloaded)return;
+swReloaded=true;
+window.location.reload();
+});
 window.addEventListener("load",function(){
-navigator.serviceWorker.register("sw.js").catch(function(){});
+navigator.serviceWorker.register("sw.js").then(function(reg){
+try{var p=reg.update();if(p&&p.catch)p.catch(function(){})}catch(e){}
+}).catch(function(){});
 });
 }
 </script>
