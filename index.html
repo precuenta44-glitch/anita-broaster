@@ -116,6 +116,11 @@ label.f{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}
 .empty{color:var(--muted);text-align:center;padding:18px 0}
 .notice{border-radius:12px;padding:12px 14px;font-size:14px;margin-top:12px;display:none}
 .notice.ok{display:block;background:var(--green-bg);color:var(--green);font-weight:700}
+.orderSent{display:none;margin-top:14px;background:var(--green-bg);border:2px solid var(--green);border-radius:16px;padding:20px 16px;text-align:center}
+.orderSent.show{display:block}
+.orderSent .big{font-size:28px;font-weight:900;color:var(--green);line-height:1.2}
+.orderSent .code{font-size:19px;font-weight:800;margin-top:6px}
+.orderSent p{margin:8px 0 0;font-size:13px;color:var(--muted);line-height:1.45}
 .req{color:#B3261E;font-weight:900}
 .reqNote{font-weight:700;color:#B3261E;font-size:12px}
 input.inputError{border-color:#B3261E!important;background:#FFF3F1;box-shadow:0 0 0 3px rgba(179,38,30,.15)}
@@ -216,9 +221,14 @@ a.wa{color:var(--green);font-weight:800}
     <div class="orderAlert" id="orderAlert" role="alert" aria-live="assertive"></div>
     <p class="orderHint" id="orderHint"></p>
     <div style="height:14px"></div>
-    <button class="btn green" id="sendBtn" disabled>📲 Pedir por WhatsApp — 974 953 476</button>
+    <button class="btn green" id="sendBtn" disabled>CONFIRMAR PEDIDO</button>
     <p style="color:var(--muted);font-size:13px;margin:8px 0 0">Sin tu nombre y sin tu mesa o dirección no se puede enviar el pedido.</p>
     <div class="notice" id="orderNotice"></div>
+    <div class="orderSent" id="orderSent" role="status">
+      <div class="big">✓ Pedido enviado</div>
+      <div class="code" id="orderSentCode"></div>
+      <p>También abrimos WhatsApp con tu pedido listo, solo toca enviar.</p>
+    </div>
     <p style="color:var(--muted);font-size:13px;margin:12px 0 0">Al tocar el botón se abre WhatsApp con tu pedido ya escrito, listo para enviar al número del local.</p>
     <div class="qrShare">
       <p>POR FAVOR, NOS AYUDARÍA COMPARTIENDO EL QR DE LA CARTA CON SUS AMISTADES</p>
@@ -571,6 +581,7 @@ return parts.join(" · ");
 }
 function renderCart(){
 var list=document.getElementById("cartList");
+if(cart.length){var os=document.getElementById("orderSent");if(os)os.classList.remove("show")}
 if(!cart.length){
 list.innerHTML='<p class="empty">Tu pedido está vacío. Toca “Personalizar y agregar” en un plato para empezar.</p>';
 }else{
@@ -606,45 +617,69 @@ document.getElementById("barTotal").textContent=money(t);
 document.getElementById("barCount").textContent=n+(n===1?" producto":" productos")+(fee>0?" · incl. delivery "+money(fee):(deliveryQuote()?" · delivery a cotizar":""));
 }
 document.getElementById("barGo").addEventListener("click",function(){document.getElementById("cartTitle").scrollIntoView({behavior:"smooth"})});
-var WA_TEMPLATE_DEFAULT="🍗 *PEDIDO — ANITA BROASTER*\n*Cliente:* {cliente}\n*Modalidad:* {modalidad}\n*Pago:* {pago}\n*Zona de delivery:* {zona} ({delivery})\n------------------------\n{pedido}\n------------------------\nSubtotal: {subtotal}\nDelivery ({zona}): {delivery}\n*TOTAL: {total}*";
-function waDetail(i){
+var WHATSAPP_PLANTILLA_DEFAULT="🍗 *PEDIDO — ANITA BROASTER*\n*Cliente:* {cliente}\n*Modalidad:* {modalidad}\n*Pago:* {pago}\n*Zona de delivery:* {zona} ({delivery})\n------------------------\n{pedido}\n------------------------\nSubtotal: {subtotal}\nDelivery ({zona}): {delivery}\n*TOTAL: {total}*";
+function whatsappPlantilla(){
+var v=SETTINGS.whatsapp_plantilla;
+if(typeof v==="string"&&v.trim())return v;
+return WHATSAPP_PLANTILLA_DEFAULT;
+}
+function itemDetailWhatsapp(i){
 if(i.drink)return i.price>0?"Bebida":"Bebida · precio a confirmar por WhatsApp";
-var parts=["*Cremas:* "+(i.creams.length?i.creams.join(", "):"sin cremas")];
+var parts=[];
+parts.push("*Cremas:* "+(i.creams.length?i.creams.join(", "):"sin cremas"));
 if(i.salad)parts.push(i.salad);
 if(i.rice)parts.push(i.rice);
 if(i.note)parts.push("Nota: "+i.note);
 return parts.join(" · ");
 }
-function waTemplateData(name,extra,note){
-var pedido=[];
-cart.forEach(function(i){
-pedido.push("• "+i.qty+" × "+i.name+" — "+(i.price>0?money(i.price*i.qty):"a confirmar"));
-pedido.push(" "+waDetail(i));
-});
-var notas=[];
-if(deliveryQuote())notas.push("Nota: el total no incluye el delivery; el costo para otras zonas se cotiza por WhatsApp.");
-var hasAsk=false;cart.forEach(function(i){if(i.price<=0)hasAsk=true});
-if(hasAsk)notas.push("Nota: algunas bebidas tienen precio a confirmar.");
-if(note)notas.push("Nota: "+note);
-return{cliente:name||"",modalidad:fulfill+(extra?" — "+extra:""),pago:(payMethod==="yape"?"Yape":"Efectivo"),zona:(fulfill==="Delivery"?ZONES[zone].label:""),pedido:pedido.join("\n"),subtotal:money(cartSubtotal()),delivery:(fulfill==="Delivery"?(deliveryQuote()?"a cotizar":money(deliveryFee())):""),total:money(cartTotal()),notas:notas.join("\n")};
-}
-function renderWaTemplate(tpl,name,extra,note){
-var d=waTemplateData(name,extra,note);
-var out=String(tpl);
-for(var k in d){out=out.split("{"+k+"}").join(d[k])}
-var lines=[];
-out.split("\n").forEach(function(l){
-var t=l.trim();
-if(!t)return;
-var bare=t.replace(/^\*[^*:]+:\*\s*/,"").replace(/\(\s*\)/g,"").trim();
-if(!bare)return;
-if(/^[^:]+:\s*$/.test(bare))return;
-lines.push(l);
-});
-return lines;
-}
 function buildActualLines(name,extra,note){
-return renderWaTemplate(WA_TEMPLATE_DEFAULT,name,extra,note);
+var hasAsk=false;
+var pedidoLines=[];
+cart.forEach(function(i){
+pedidoLines.push("• "+i.qty+" × "+i.name+" — "+(i.price>0?money(i.price*i.qty):"a confirmar"));
+pedidoLines.push(" "+itemDetailWhatsapp(i));
+if(i.price<=0)hasAsk=true;
+});
+var notasLines=[];
+if(deliveryQuote())notasLines.push("Nota: el total no incluye el delivery; el costo para otras zonas se cotiza por WhatsApp.");
+if(hasAsk)notasLines.push("Nota: algunas bebidas tienen precio a confirmar.");
+if(note)notasLines.push("Nota: "+note);
+var isDelivery=fulfill==="Delivery";
+var vals={
+cliente:name||"",
+	modalidad:fulfill+(extra?" — "+extra:""),
+	pago:payMethod==="yape"?"Yape":"Efectivo",
+	zona:isDelivery?ZONES[zone].label:"",
+	pedido:pedidoLines.join("\n"),
+	subtotal:money(cartSubtotal()),
+	total:money(cartTotal()),
+	delivery:isDelivery?(deliveryQuote()?"a cotizar":money(deliveryFee())):"",
+	notas:notasLines.join("\n")
+};
+var tpl=whatsappPlantilla();
+var usesNotas=tpl.indexOf("{notas}")>=0;
+var out=[];
+tpl.split("\n").forEach(function(rawLine){
+if(!isDelivery&&(rawLine.indexOf("{zona}")>=0||rawLine.indexOf("{delivery}")>=0))return;
+var line=rawLine;
+line=line.split("{cliente}").join(vals.cliente);
+line=line.split("{modalidad}").join(vals.modalidad);
+line=line.split("{pago}").join(vals.pago);
+line=line.split("{zona}").join(vals.zona);
+line=line.split("{pedido}").join(vals.pedido);
+line=line.split("{subtotal}").join(vals.subtotal);
+line=line.split("{total}").join(vals.total);
+line=line.split("{delivery}").join(vals.delivery);
+line=line.split("{notas}").join(vals.notas);
+line.split("\n").forEach(function(sub){
+if(sub.trim()==="")return;
+out.push(sub);
+});
+});
+if(!usesNotas&&notasLines.length){
+notasLines.forEach(function(nl){out.push(nl)});
+}
+return out;
 }
 function stripEmojisText(s){var str=String(s);var lead=/^[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u.test(str);var out=str.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\uFE0F\u200D]/gu,"");if(lead)out=out.replace(/^\s+/,"");return out}
 function buildSinEmojisLines(name,extra,note){return buildActualLines(name,extra,note).map(function(l){return stripEmojisText(l)})}
@@ -704,8 +739,6 @@ var st=whatsappEstilo();
 if(st==="corto")return buildCortoLines(name,extra,note);
 if(st==="detallado")return buildDetalladoLines(name,extra,note);
 if(st==="sin_emojis")return buildSinEmojisLines(name,extra,note);
-var tpl=SETTINGS.whatsapp_plantilla;
-if(tpl&&String(tpl).trim())return renderWaTemplate(String(tpl),name,extra,note);
 return buildActualLines(name,extra,note);
 }
 document.getElementById("sendBtn").addEventListener("click",function(){
@@ -720,11 +753,32 @@ var name=document.getElementById("custName").value.trim();
 var extra=document.getElementById("custExtra").value.trim();
 var note=document.getElementById("custNote").value.trim();
 var lines=buildWhatsappLines(name,extra,note);
-var notice=document.getElementById("orderNotice");
-notice.className="notice ok";
-notice.textContent="✅ Pedido listo: se abre WhatsApp para enviarlo al local.";
-saveOrder(name,extra,note);
-window.open("https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(lines.join("\n")),"_blank");
+var waUrl="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(lines.join("\n"));
+var btn=document.getElementById("sendBtn");
+btn.disabled=true;
+btn.textContent="Confirmando tu pedido…";
+var waWin=null;
+try{waWin=window.open("","_blank")}catch(e){waWin=null}
+saveOrder(name,extra,note).then(function(res){
+if(!res||!res.ok){
+if(waWin){try{waWin.close()}catch(e){}}
+btn.disabled=false;
+btn.textContent="CONFIRMAR PEDIDO";
+var abox=document.getElementById("orderAlert");
+abox.innerHTML="⚠️ <b>No se pudo guardar tu pedido.</b><br/>Revisa tu conexión a internet e inténtalo de nuevo: tu pedido sigue en la lista, no se perdió nada.";
+abox.className="orderAlert show";
+abox.scrollIntoView({behavior:"smooth",block:"center"});
+return;
+}
+document.getElementById("orderSentCode").textContent="Pedido "+res.code;
+document.getElementById("orderSent").classList.add("show");
+cart=[];
+renderCart();
+btn.textContent="CONFIRMAR PEDIDO";
+document.getElementById("orderSent").scrollIntoView({behavior:"smooth",block:"center"});
+if(waWin){try{waWin.location.assign(waUrl)}catch(e){window.open(waUrl,"_blank")}}
+else if(!window.open(waUrl,"_blank")){window.location.assign(waUrl)}
+});
 });
 var SUPA_URL="https://qswmaegxflkmvyqvlfoh.supabase.co";
 var SUPA_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzd21hZWd4ZmxrbXZ5cXZsZm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1NDU3OTIsImV4cCI6MjExMDEyMTc5Mn0.tejhyJpeZKEHXy3IjE_UP9g3nbuyhS3JWqp9VPDG1ns";
@@ -875,7 +929,7 @@ headers:supaHeaders({"Content-Type":"application/json","Prefer":"return=represen
 body:JSON.stringify(body)
 });
 }
-postOrder(orderBody)
+return postOrder(orderBody)
 .then(function(r){
 if(r.ok)return r.json();
 var retryBody={};
@@ -884,14 +938,16 @@ return postOrder(retryBody).then(function(r2){if(!r2.ok)throw new Error("orders"
 })
 .then(function(data){
 var oid=data&&data[0]&&data[0].id;
-if(!oid)return;
+if(!oid)throw new Error("orders");
 var rows=snapshot.map(function(i){
 var mods=i.drink?["Bebida"]:(i.creams.slice().concat(i.salad?[i.salad]:[]).concat(i.rice?[i.rice]:[]));
 return{order_id:oid,product_id:i.productId||null,product_name:i.name,qty:i.qty,unit_price_cents:Math.round(i.price*100),modifiers:mods,notes:(i.note||"")+(note?" | Nota general: "+note:"")};
 });
-return fetch(SUPA_URL+"/rest/v1/order_items",{method:"POST",headers:supaHeaders({"Content-Type":"application/json","Prefer":"return=minimal"}),body:JSON.stringify(rows)});
+return fetch(SUPA_URL+"/rest/v1/order_items",{method:"POST",headers:supaHeaders({"Content-Type":"application/json","Prefer":"return=minimal"}),body:JSON.stringify(rows)})
+.then(function(r3){if(!r3.ok)throw new Error("items")});
 })
-.catch(function(){});
+.then(function(){return{ok:true,code:code}})
+.catch(function(){return{ok:false,code:code}});
 }
 if(!hydrateFromCache()){renderMenu();renderDrinks();renderCart()}
 fetchMenu();
