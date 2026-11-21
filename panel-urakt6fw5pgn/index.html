@@ -360,6 +360,9 @@
       /* Voz que lee los pedidos nuevos de la pizarra */
       .piz-voice{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 2px}
       .piz-voice .btn{min-height:2.75rem}
+      .piz-voice-pick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%}
+      .piz-voice-pick label{font-weight:700}
+      .piz-voice-pick select{flex:1 1 220px;min-width:0;max-width:420px}
       .btn.voice-on{background:#1e7d46;border-color:#1e7d46;color:#fff}
       .btn.voice-on:hover{background:#17653a;border-color:#17653a}
       .btn.voice-off{background:var(--surface2);color:var(--ink)}
@@ -415,6 +418,9 @@
       .piz-paid-badge{font-size:.82rem;font-weight:800;padding:4px 10px;border-radius:999px;align-self:center}
       .piz-paid-badge.paid{background:#e2f3e8;color:#1e7d46}
       .piz-paid-badge.unpaid{background:#fdecec;color:#c92a2a}
+      /* En la Pizarra normal no se muestran las pastillitas de estado («Falta pagar» ni «✓ Pagado»); solo en pantalla completa */
+      .piz-paid-badge{display:none}
+      body.tv .piz-paid-badge{display:inline-block}
       body.tv .piz-paid-row{display:none}
       body.tv .btn.piz-paid-btn{font-size:.9rem;padding:8px 10px;min-height:2.2rem}
       body.tv .piz-paid-badge{font-size:.78rem}
@@ -1086,7 +1092,7 @@ alter table orders add column if not exists pagado boolean not null default fals
       <section class="panel-sec s8" id="sec-pizarra" aria-labelledby="hPizarra" hidden>
         <div class="sec-head"><span class="sec-num">8</span><h2 id="hPizarra">Pizarra de pedidos</h2></div>
         <p class="sec-tag">8 · Pizarra — aquí llegan los pedidos como en tu pizarra de la cocina.</p>
-        <p class="sec-sub">Cada pedido es un <strong>cuadro</strong>: arriba el cliente y su dirección, la fecha y la hora (AM/PM) y si es delivery, mesa o recojo; abajo cada producto con su cantidad, sus cremas y si es con o sin arroz y con o sin ensalada, y cómo pagó el cliente (<strong>Pago: Yape</strong> o <strong>Pago: Efectivo</strong>). Como primero entregas y algunos pagan después, cada cuadro trae un botón grande de pago: <strong style="color:#e65100">FALTA PAGAR</strong> cuando todavía no paga y <strong style="color:#1e7d46">✓ PAGADO</strong> cuando ya pagó — tócalo para cambiarlo y se guarda al momento. Arriba ves el resumen <strong>«Faltan pagar»</strong> con cuánto te deben en total, y con el filtro <strong>Faltan pagar</strong> ves solo los pedidos sin pagar, de hoy y de días anteriores. Cuando ya lo preparaste y lo entregaste, pulsa <strong>✕ ENTREGADO</strong> y el cuadro queda tachado con una X grande. Con <strong>Eliminar pedido</strong> borras para siempre un pedido de prueba. La pizarra se actualiza sola cada 15 segundos. En <strong>📺 Pantalla completa</strong> (para tu pantalla grande) los pedidos salen más pequeños: se ven <strong>8 por pantalla</strong>, las opciones de cada pedido van escondidas tras un solo botón <strong>«Acciones»</strong> — al tocarlo se despliegan <strong>FALTA PAGAR / ✓ PAGADO, ENTREGADO, Cancelar pedido y Eliminar pedido</strong>, y la pastillita de la tarjeta te sigue mostrando si ya pagó o falta pagar — para que el pedido se lea completo sin que los botones ocupen espacio, y con los botones <strong>← Anterior</strong> y <strong>Siguiente →</strong> de abajo pasas a los demás pedidos. Con el botón <strong>🔊 Voz</strong> la pizarra lee en voz alta, con voz de hombre, cada pedido nuevo apenas llega — cliente, modalidad, productos con sus cremas, total y pago — y con <strong>Probar voz</strong> escuchas un ejemplo antes de prenderla.</p>
+        <p class="sec-sub">Cada pedido es un <strong>cuadro</strong>: arriba el cliente y su dirección, la fecha y la hora (AM/PM) y si es delivery, mesa o recojo; abajo cada producto con su cantidad, sus cremas y si es con o sin arroz y con o sin ensalada, y cómo pagó el cliente (<strong>Pago: Yape</strong> o <strong>Pago: Efectivo</strong>). Como primero entregas y algunos pagan después, cada cuadro trae un botón grande de pago: <strong style="color:#e65100">FALTA PAGAR</strong> cuando todavía no paga y <strong style="color:#1e7d46">✓ PAGADO</strong> cuando ya pagó — tócalo para cambiarlo y se guarda al momento. Arriba ves el resumen <strong>«Faltan pagar»</strong> con cuánto te deben en total, y con el filtro <strong>Faltan pagar</strong> ves solo los pedidos sin pagar, de hoy y de días anteriores. Cuando ya lo preparaste y lo entregaste, pulsa <strong>✕ ENTREGADO</strong> y el cuadro queda tachado con una X grande. Con <strong>Eliminar pedido</strong> borras para siempre un pedido de prueba. La pizarra se actualiza sola cada 15 segundos. En <strong>📺 Pantalla completa</strong> (para tu pantalla grande) los pedidos salen más pequeños: se ven <strong>8 por pantalla</strong>, las opciones de cada pedido van escondidas tras un solo botón <strong>«Acciones»</strong> — al tocarlo se despliegan <strong>FALTA PAGAR / ✓ PAGADO, ENTREGADO, Cancelar pedido y Eliminar pedido</strong>, y la pastillita de la tarjeta te sigue mostrando si ya pagó o falta pagar — para que el pedido se lea completo sin que los botones ocupen espacio, y con los botones <strong>← Anterior</strong> y <strong>Siguiente →</strong> de abajo pasas a los demás pedidos. Con el botón <strong>🔊 Voz</strong> la pizarra lee en voz alta cada pedido nuevo apenas llega — cliente, modalidad, productos con sus cremas, total y pago — y en <strong>«Voz que lee los pedidos»</strong> escoges cuál de las voces de tu celular o computadora quieres que lea (queda guardada en ese aparato), y con <strong>Probar voz</strong> escuchas un ejemplo con la voz escogida antes de prenderla.</p>
         <div class="tv-bar" id="tvBar">
           <div class="tv-title">Pizarra de pedidos · Anita Broaster</div>
           <button class="btn voice-off" type="button" id="btnVoiceToggleTv" aria-pressed="false">🔇 Voz: apagada</button>
@@ -1096,7 +1102,14 @@ alter table orders add column if not exists pagado boolean not null default fals
         <div class="piz-voice" role="group" aria-label="Voz que lee los pedidos nuevos">
           <button class="btn voice-off" type="button" id="btnVoiceToggle" aria-pressed="false">🔇 Voz: apagada</button>
           <button class="btn ghost" type="button" id="btnVoiceTest">Probar voz</button>
-          <span class="hint" style="margin:0">Si prendes la voz, cada pedido nuevo que llegue a la pizarra se lee en voz alta, con voz de hombre.</span>
+          <span class="hint" style="margin:0">Si prendes la voz, cada pedido nuevo que llegue a la pizarra se lee en voz alta.</span>
+          <div class="piz-voice-pick">
+            <label for="selVoicePick">Voz que lee los pedidos:</label>
+            <select id="selVoicePick" aria-label="Voz que lee los pedidos">
+              <option value="">Automática (la de siempre)</option>
+            </select>
+            <span class="hint" style="margin:0">Escoge la voz que más te guste, pruébala con «Probar voz» y queda guardada en este aparato.</span>
+          </div>
         </div>
         <div class="piz-unpaid-banner" id="pizUnpaidSummary" role="status">Faltan pagar: 0 pedidos — S/ 0.00 por cobrar</div>
         <div class="piz-stats">
@@ -3550,7 +3563,9 @@ alter table orders add column if not exists pagado boolean not null default fals
       var vozQueue = [];
       var vozSpeaking = false;
       var vozUnlocked = false;     // el navegador exige un primer toque del usuario antes de dejar sonar
+      var vozChosenUri = ""; // voz escogida por el dueño en el selector; "" = automática (la de siempre)
       try { vozOn = window.localStorage.getItem("anita_panel_voz_on") === "1"; } catch(e){}
+      try { vozChosenUri = String(window.localStorage.getItem("anita_panel_voz_elegida") || ""); } catch(e){}
       try { var vIds0 = JSON.parse(window.localStorage.getItem("anita_panel_voz_ids") || "[]"); if (Array.isArray(vIds0)) vozIdsArr = vIds0; } catch(e){}
       vozIdsArr.forEach(function(id){ vozSeen[id] = 1; });
       function saveVozIds(){ try { window.localStorage.setItem("anita_panel_voz_ids", JSON.stringify(vozIdsArr.slice(-100))); } catch(e){} }
@@ -3564,6 +3579,10 @@ alter table orders add column if not exists pagado boolean not null default fals
         if (!("speechSynthesis" in window)) return null;
         var vs = [];
         try { vs = window.speechSynthesis.getVoices() || []; } catch(e){}
+        // Si el dueño escogió una voz y ese aparato todavía la tiene, esa manda.
+        if (vozChosenUri){
+          for (var ci = 0; ci < vs.length; ci++){ if (String(vs[ci].voiceURI || "") === vozChosenUri) return { voice: vs[ci], pitch: 1 }; }
+        }
         var es = vs.filter(function(v){ return /^es([-_]|$)/i.test(String(v.lang || "")); });
         if (!es.length) return { voice: null, pitch: 0.8 };
         function isMale(v){ var n = String(v.name || "").toLowerCase(); return VOZ_MALE_NAMES.some(function(m){ return n.indexOf(m) >= 0; }); }
@@ -3661,6 +3680,37 @@ alter table orders add column if not exists pagado boolean not null default fals
         vozBaselineDone = true;
         saveVozIds();
       }
+      // Llena el selector con las voces instaladas en ESTE aparato: primero
+      // las de español y después las demás. Se vuelve a llamar cuando el
+      // navegador termina de cargar las voces (evento voiceschanged).
+      function vozFillSelect(){
+        var sel = $("selVoicePick"); if (!sel) return;
+        var vs = [];
+        if ("speechSynthesis" in window){ try { vs = window.speechSynthesis.getVoices() || []; } catch(e){} }
+        sel.innerHTML = "";
+        if (!vs.length){
+          var o0 = document.createElement("option");
+          o0.value = ""; o0.textContent = "Este aparato no tiene voces instaladas";
+          sel.appendChild(o0);
+          sel.disabled = true;
+          return;
+        }
+        sel.disabled = false;
+        var auto = document.createElement("option");
+        auto.value = ""; auto.textContent = "Automática (la de siempre)";
+        sel.appendChild(auto);
+        var esFirst = vs.filter(function(v){ return /^es([-_]|$)/i.test(String(v.lang || "")); });
+        var rest = vs.filter(function(v){ return !/^es([-_]|$)/i.test(String(v.lang || "")); });
+        esFirst.concat(rest).forEach(function(v){
+          var op = document.createElement("option");
+          op.value = String(v.voiceURI || "");
+          op.textContent = String(v.name || "Voz") + " — " + String(v.lang || "");
+          sel.appendChild(op);
+        });
+        // Si la voz guardada ya no está en este aparato, vuelve a Automática.
+        sel.value = vozChosenUri || "";
+        if (sel.value !== (vozChosenUri || "")){ vozChosenUri = ""; try { window.localStorage.removeItem("anita_panel_voz_elegida"); } catch(e){} sel.value = ""; }
+      }
       function vozSyncButtons(){
         var label = vozOn ? "🔊 Voz: activada" : "🔇 Voz: apagada";
         ["btnVoiceToggle", "btnVoiceToggleTv"].forEach(function(id){
@@ -3698,10 +3748,19 @@ alter table orders add column if not exists pagado boolean not null default fals
       if ($("btnVoiceToggle")) $("btnVoiceToggle").addEventListener("click", function(){ vozSetOn(!vozOn); });
       if ($("btnVoiceToggleTv")) $("btnVoiceToggleTv").addEventListener("click", function(){ vozSetOn(!vozOn); });
       if ($("btnVoiceTest")) $("btnVoiceTest").addEventListener("click", vozTest);
+      if ($("selVoicePick")) $("selVoicePick").addEventListener("change", function(){
+        vozChosenUri = String(this.value || "");
+        try {
+          if (vozChosenUri) window.localStorage.setItem("anita_panel_voz_elegida", vozChosenUri);
+          else window.localStorage.removeItem("anita_panel_voz_elegida");
+        } catch(e){}
+        toast(vozChosenUri ? "Voz guardada en este aparato. Pulsa «Probar voz» para escucharla." : "Voz automática: se usará la de siempre.");
+      });
       // Primer toque en la página: la voz queda lista para sonar (el navegador lo exige antes de permitir sonido).
       document.addEventListener("pointerdown", function(){ vozUnlocked = true; vozFlush(); });
       document.addEventListener("keydown", function(){ vozUnlocked = true; vozFlush(); });
-      if ("speechSynthesis" in window){ try { window.speechSynthesis.getVoices(); window.speechSynthesis.addEventListener("voiceschanged", function(){ try { window.speechSynthesis.getVoices(); } catch(e){} }); } catch(e){} }
+      if ("speechSynthesis" in window){ try { window.speechSynthesis.getVoices(); window.speechSynthesis.addEventListener("voiceschanged", function(){ try { window.speechSynthesis.getVoices(); } catch(e){} vozFillSelect(); }); } catch(e){} }
+      vozFillSelect();
       vozSyncButtons();
       function limaTime(iso){
         try { return new Date(iso).toLocaleTimeString("en-US", { timeZone:"America/Lima", hour:"numeric", minute:"2-digit", hour12:true }); } catch(e){ return ""; }
