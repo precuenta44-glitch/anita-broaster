@@ -70,6 +70,10 @@
       .sec-head h2{font-size:1.55rem;font-weight:800}
       .sec-head .mark{width:10px;height:10px;background:var(--accent);border-radius:3px;flex:none;align-self:center}
       .sec-sub{color:var(--muted);margin:0 0 16px;max-width:64ch}
+      .help-text[hidden]{display:none}
+      .help-toggle{margin-left:auto;flex:none;align-self:center;width:2.75rem;height:2.75rem;min-height:2.75rem;border-radius:999px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font-size:1rem;font-weight:800;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+      .help-toggle:hover{border-color:var(--accent);color:var(--accent)}
+      .help-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
       /* Alerta de activación */
       .alert{display:none;border:1px solid var(--gold);background:var(--accent-soft);border-radius:14px;padding:16px 18px;margin-top:18px}
@@ -4811,7 +4815,62 @@ alter table orders add column if not exists pagado boolean not null default fals
         }
       }
 
+      // ---------- textos de ayuda plegables (flechita ▲/▼ por sección) ----------
+      // Solo se pliega el mensaje de ayuda/introducción de cada sección
+      // (sec-tag + primer sec-sub bajo el título); el contenido real de la
+      // sección nunca se oculta. El estado se guarda en localStorage de
+      // este aparato; por defecto el texto empieza visible, como siempre.
+      function initHelpToggles(){
+        var KEY_HELP = "anita_panel_help_collapsed_v1";
+        var collapsed = {};
+        try { var rawH = window.localStorage.getItem(KEY_HELP); if (rawH) collapsed = JSON.parse(rawH) || {}; } catch(e){ collapsed = {}; }
+        if (!collapsed || typeof collapsed !== "object") collapsed = {};
+        var secs = document.querySelectorAll(".panel-sec");
+        for (var si = 0; si < secs.length; si++){
+          (function(sec){
+            var secId = sec.id; if (!secId) return;
+            var head = null;
+            for (var ci = 0; ci < sec.children.length; ci++){ if (sec.children[ci].classList && sec.children[ci].classList.contains("sec-head")){ head = sec.children[ci]; break; } }
+            if (!head) return;
+            var helpEls = [];
+            var sib = head.nextElementSibling;
+            while (sib && (sib.classList.contains("sec-tag") || sib.classList.contains("sec-sub"))){
+              helpEls.push(sib);
+              sib = sib.nextElementSibling;
+            }
+            if (!helpEls.length) return;
+            var wrap = document.createElement("div");
+            wrap.className = "help-text";
+            wrap.id = "help-" + secId;
+            head.parentNode.insertBefore(wrap, helpEls[0]);
+            for (var hi = 0; hi < helpEls.length; hi++) wrap.appendChild(helpEls[hi]);
+            var h2 = head.querySelector("h2");
+            var secTitle = h2 ? h2.textContent.trim() : secId;
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "help-toggle";
+            btn.setAttribute("aria-controls", wrap.id);
+            function renderHelp(){
+              var isHidden = !!collapsed[secId];
+              wrap.hidden = isHidden;
+              btn.textContent = isHidden ? "▼" : "▲";
+              btn.setAttribute("aria-expanded", isHidden ? "false" : "true");
+              btn.setAttribute("aria-label", (isHidden ? "Mostrar" : "Ocultar") + " ayuda de " + secTitle);
+              btn.title = isHidden ? "Mostrar ayuda" : "Ocultar ayuda";
+            }
+            btn.addEventListener("click", function(){
+              collapsed[secId] = !collapsed[secId];
+              try { window.localStorage.setItem(KEY_HELP, JSON.stringify(collapsed)); } catch(e){}
+              renderHelp();
+            });
+            head.appendChild(btn);
+            renderHelp();
+          })(secs[si]);
+        }
+      }
+
       // ---------- arranque ----------
+      initHelpToggles();
       showTab("sec-platos", false);
       $("closeDate").value = limaToday();
       syncPizDayUI();
