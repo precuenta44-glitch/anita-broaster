@@ -314,7 +314,14 @@
       .cat-info{flex:1;min-width:150px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;cursor:pointer}
       .cat-info strong{font-size:1.05rem}
       .cat-count{color:var(--muted);font-size:.85rem;font-weight:600}
-      .cat-actions{display:flex;gap:8px;flex-wrap:wrap}
+      .cat-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+      /* Pestaña en el menú de arriba de la carta (settings: nav_categorias) */
+      .cat-nav-toggle{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;font-weight:700;font-size:.88rem;cursor:pointer;min-height:2.5rem;display:inline-flex;align-items:center;gap:6px}
+      .cat-nav-toggle:hover{border-color:var(--ok);color:var(--ok)}
+      .cat-nav-toggle.on{background:var(--ok);border-color:var(--ok);color:#fff}
+      .cat-nav-toggle.on:hover{background:#17653a;border-color:#17653a;color:#fff}
+      .cat-nav-toggle:disabled{opacity:.55;cursor:wait}
+      @media (prefers-color-scheme: dark){ .cat-nav-toggle.on{color:#0b2416} .cat-nav-toggle.on:hover{color:#0b2416} }
       .cat-rename{display:flex;gap:8px;flex:1;flex-wrap:wrap;align-items:center}
       .cat-rename input{flex:1;min-width:170px}
       .dish-group-head{display:flex;align-items:center;gap:10px;margin:22px 0 10px;flex-wrap:wrap}
@@ -913,7 +920,7 @@
       <section class="panel-sec s6" id="sec-categorias" aria-labelledby="hCat" hidden>
         <div class="sec-head"><span class="sec-num">6</span><h2 id="hCat">Categorías</h2></div>
         <p class="sec-tag">6 · Categorías — aquí creas los grupos de la carta y metes los platos que quieras.</p>
-        <p class="sec-sub">Las categorías son los <strong>grupos de la carta</strong>: en cada una metes los platos que quieras (por ejemplo, en «Adicionales» van las porciones). Desde aquí puedes <strong>crear una categoría nueva</strong>, <strong>renombrarla</strong> (el nombre cambia en todos sus platos a la vez), pulsar <strong>«Agregar plato aquí»</strong> para crear un plato ya dentro de esa categoría, y con <strong>«↑ Subir»</strong> / <strong>«↓ Bajar»</strong> eliges <strong>en qué parte de la carta va cada categoría</strong>: la carta las muestra en ese mismo orden, cada una con sus platos.</p>
+        <p class="sec-sub">Las categorías son los <strong>grupos de la carta</strong>: en cada una metes los platos que quieras (por ejemplo, en «Adicionales» van las porciones). Desde aquí puedes <strong>crear una categoría nueva</strong>, <strong>renombrarla</strong> (el nombre cambia en todos sus platos a la vez), pulsar <strong>«Agregar plato aquí»</strong> para crear un plato ya dentro de esa categoría, y con <strong>«↑ Subir»</strong> / <strong>«↓ Bajar»</strong> eliges <strong>en qué parte de la carta va cada categoría</strong>: la carta las muestra en ese mismo orden, cada una con sus platos. Con <strong>«＋ Al menú de arriba»</strong> añades la categoría como <strong>pestaña junto a «Platos»</strong> en la carta — por ejemplo «Anticuchos» — y al tocarla la carta baja sola hasta esa categoría; las que ya están dentro se ven marcadas con <strong>«✓ En el menú de arriba»</strong>, y con <strong>«↑ Pestaña»</strong> / <strong>«↓ Pestaña»</strong> cambias el orden en que aparecen las pestañas. Todo se guarda al momento.</p>
         <div id="listaCategorias"><div class="empty">Cargando categorías…</div></div>
         <div class="cream-add-row" style="margin-top:12px">
           <input type="text" id="nuevaCategoria" maxlength="30" placeholder="Nombre de la categoría nueva. Ej.: Combos" aria-label="Nombre de la categoría nueva" />
@@ -1656,6 +1663,75 @@ alter table orders add column if not exists pagado boolean not null default fals
           setTimeout(function(){ scrollToCategoryGroup(name); }, 80);
         });
       }
+      // ---------- pestañas del menú de arriba de la carta (settings: nav_categorias) ----------
+      // La lista de categorías que salen como pestañas junto a «Platos» en la
+      // carta se guarda en settings con la clave nav_categorias, como un
+      // arreglo JSON de nombres (ej. '["Anticuchos"]'); el orden del arreglo
+      // es el orden de las pestañas. Si la lectura falla o el valor no es un
+      // arreglo válido, la lista queda vacía y ningún control sale marcado.
+      function navCategoriasList(){
+        try {
+          var v = (typeof settingsCache !== "undefined" && settingsCache) ? settingsCache.nav_categorias : null;
+          var arr = null;
+          if (Array.isArray(v)) arr = v;
+          else if (typeof v === "string" && v.trim()){ try { arr = JSON.parse(v); } catch(e){ arr = null; } }
+          if (!Array.isArray(arr)) return [];
+          var out = [], seen = {};
+          arr.forEach(function(x){
+            var n = String(x == null ? "" : x).trim();
+            var k = n.toLowerCase();
+            if (n && !seen[k]){ seen[k] = true; out.push(n); }
+          });
+          return out;
+        } catch(e){ return []; }
+      }
+      function persistNavCategorias(list, okMsg){
+        var val = JSON.stringify(list);
+        return saveSetting("nav_categorias", val).then(function(res){
+          if (!res || !res.ok){ toast(settingsFailMsg(), true); renderCategories(); return false; }
+          settingsCache.nav_categorias = val;
+          try { var st = cacheGet("settings") || {}; st.nav_categorias = val; cacheSet("settings", st); } catch(e){}
+          renderCategories();
+          if (okMsg) toast(okMsg);
+          return true;
+        }).catch(function(){ toast("No se pudo guardar. Revisa tu conexión.", true); renderCategories(); return false; });
+      }
+      function toggleNavCategoria(raw, btn){
+        var name = String(raw || "");
+        var list = navCategoriasList();
+        var idx = -1;
+        for (var i = 0; i < list.length; i++){ if (list[i].toLowerCase() === name.toLowerCase()){ idx = i; break; } }
+        var next, msg;
+        if (idx >= 0){
+          next = list.filter(function(x){ return x.toLowerCase() !== name.toLowerCase(); });
+          msg = "«" + catLabel(name) + "» ya no sale en el menú de arriba de la carta.";
+        } else {
+          next = list.concat([name]);
+          msg = "«" + catLabel(name) + "» ya sale como pestaña junto a «Platos» en la carta: al tocarla, la carta baja hasta esa categoría.";
+        }
+        if (btn) btn.disabled = true;
+        persistNavCategorias(next, msg);
+      }
+      function moveNavCategoria(raw, dir, btn){
+        var name = String(raw || "");
+        var list = navCategoriasList();
+        var i = -1;
+        for (var k = 0; k < list.length; k++){ if (list[k].toLowerCase() === name.toLowerCase()){ i = k; break; } }
+        var j = i + dir;
+        if (i < 0 || j < 0 || j >= list.length) return;
+        var tmp = list[i]; list[i] = list[j]; list[j] = tmp;
+        if (btn) btn.disabled = true;
+        persistNavCategorias(list, "Orden de las pestañas actualizado: la carta ya muestra «" + catLabel(name) + "» en su posición nueva del menú de arriba.");
+      }
+      // Si una categoría que está en el menú se renombra, la pestaña sigue al nombre nuevo.
+      function syncNavAfterRename(oldRaw, newName){
+        var list = navCategoriasList();
+        var hit = false;
+        var next = list.map(function(x){ if (x.toLowerCase() === String(oldRaw).toLowerCase()){ hit = true; return newName; } return x; });
+        if (!hit) return;
+        settingsCache.nav_categorias = JSON.stringify(next);
+        try { saveSetting("nav_categorias", JSON.stringify(next)).catch(function(){}); } catch(e){}
+      }
       function renderCategories(){
         var box = $("listaCategorias");
         if (!box) return;
@@ -1678,20 +1754,30 @@ alter table orders add column if not exists pagado boolean not null default fals
           if (!seenFood[c]){ seenFood[c] = true; foodBlocks.push(c); }
         });
         foodBlocks = sortCatRaws(foodBlocks);
+        var navList = navCategoriasList();
         rows.forEach(function(r){
           var pos = foodBlocks.indexOf(r.raw);
           var countTxt = r.count === 0 ? "Sin platos todavía" : (r.count === 1 ? "1 plato" : r.count + " platos");
           if (pos >= 0) countTxt += " · posición " + (pos + 1) + " de " + foodBlocks.length + " en la carta";
+          var navIdx = -1;
+          for (var ni = 0; ni < navList.length; ni++){ if (navList[ni].toLowerCase() === String(r.raw).toLowerCase()){ navIdx = ni; break; } }
+          var inNav = navIdx >= 0;
+          if (inNav) countTxt += " · ✓ En el menú de arriba · pestaña " + (navIdx + 1) + " de " + navList.length;
           var moveBtns = pos >= 0
             ? '<button class="btn ghost small" type="button" data-cat-up' + (pos === 0 ? " disabled" : "") + '>↑ Subir</button>' +
               '<button class="btn ghost small" type="button" data-cat-down' + (pos === foodBlocks.length - 1 ? " disabled" : "") + '>↓ Bajar</button>'
+            : "";
+          var navBtn = '<button class="cat-nav-toggle' + (inNav ? " on" : "") + '" type="button" data-cat-nav aria-pressed="' + (inNav ? "true" : "false") + '" title="Mostrar u ocultar esta categoría como pestaña junto a «Platos» en el menú de arriba de la carta">' + (inNav ? "✓ En el menú de arriba" : "＋ Al menú de arriba") + "</button>";
+          var navMoveBtns = inNav
+            ? '<button class="btn ghost small" type="button" data-cat-nav-up' + (navIdx === 0 ? " disabled" : "") + ' title="Subir esta pestaña en el menú de arriba de la carta">↑ Pestaña</button>' +
+              '<button class="btn ghost small" type="button" data-cat-nav-down' + (navIdx === navList.length - 1 ? " disabled" : "") + ' title="Bajar esta pestaña en el menú de arriba de la carta">↓ Pestaña</button>'
             : "";
           var row = document.createElement("div");
           row.className = "cat-row";
           row.innerHTML =
             '<div class="cat-info"><strong>' + esc(catLabel(r.raw)) + '</strong><span class="cat-count">' +
               countTxt + "</span></div>" +
-            '<div class="cat-actions">' + moveBtns +
+            '<div class="cat-actions">' + moveBtns + navBtn + navMoveBtns +
               '<button class="btn small" type="button" data-cat-add>Agregar plato aquí</button>' +
               '<button class="btn ghost small" type="button" data-cat-rename>Renombrar</button>' +
             "</div>";
@@ -1701,6 +1787,11 @@ alter table orders add column if not exists pagado boolean not null default fals
           var upBtn = row.querySelector("[data-cat-up]"), downBtn = row.querySelector("[data-cat-down]");
           if (upBtn) upBtn.addEventListener("click", function(){ moveCategory(r.raw, -1); });
           if (downBtn) downBtn.addEventListener("click", function(){ moveCategory(r.raw, 1); });
+          var navToggleBtn = row.querySelector("[data-cat-nav]");
+          if (navToggleBtn) navToggleBtn.addEventListener("click", function(){ toggleNavCategoria(r.raw, navToggleBtn); });
+          var navUpBtn = row.querySelector("[data-cat-nav-up]"), navDownBtn = row.querySelector("[data-cat-nav-down]");
+          if (navUpBtn) navUpBtn.addEventListener("click", function(){ moveNavCategoria(r.raw, -1, navUpBtn); });
+          if (navDownBtn) navDownBtn.addEventListener("click", function(){ moveNavCategoria(r.raw, 1, navDownBtn); });
           // Al presionar el nombre de la categoría, ir a «Mis platos» y bajar
           // hasta su grupo de platos (las bebidas van a su propia sección).
           var info = row.querySelector(".cat-info");
@@ -1746,6 +1837,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           targets.forEach(function(p){ p.category = newName; });
           extraCats = extraCats.map(function(c){ return c.toLowerCase() === String(oldRaw).toLowerCase() ? newName : c; });
           if (!targets.length && extraCats.indexOf(newName) < 0) extraCats.push(newName);
+          syncNavAfterRename(oldRaw, newName);
         }
         if (!targets.length){
           applyLocal();
@@ -3463,6 +3555,7 @@ alter table orders add column if not exists pagado boolean not null default fals
             lastSettingsFp = fp;
           }
           renderBiz(); renderYape(); renderQr(); renderWaEstilo();
+          try { renderCategories(); } catch(e){}
           return settingsCache;
         }).catch(function(){ renderBiz(); renderYape(); renderQr(); renderWaEstilo(); return settingsCache; });
       }
@@ -4697,7 +4790,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           if (!st.qr_image && settingsCache.qr_image) st.qr_image = settingsCache.qr_image;
           settingsCache = st;
           lastSettingsFp = JSON.stringify(st);
-          try { renderBiz(); renderYape(); renderQr(); renderWaEstilo(); } catch(e){}
+          try { renderBiz(); renderYape(); renderQr(); renderWaEstilo(); renderCategories(); } catch(e){}
         }
         var pz = cacheGet("pizarra");
         if (pz && Array.isArray(pz.pend) && Array.isArray(pz.del)){
