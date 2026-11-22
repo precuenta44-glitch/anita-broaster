@@ -545,7 +545,7 @@
       #btnPresas{background:#e8590c;border-color:#e8590c;color:#fff;font-weight:800}
       #btnPresas:hover{background:#d9480f;border-color:#d9480f}
       .presas-box{display:none}
-      body.tv .presas-box.open{display:block;position:fixed;top:72px;right:12px;width:min(330px,94vw);max-height:calc(100vh - 92px);overflow-y:auto;background:var(--surface);color:var(--ink);border:2px solid #1565c0;border-radius:14px;padding:12px 14px;z-index:80;box-shadow:0 14px 34px rgba(0,0,0,.5)}
+      body.tv .presas-box.open{display:block;position:fixed;top:72px;right:12px;width:min(330px,94vw);max-height:calc(100vh - 92px);overflow-y:auto;background:var(--surface);color:var(--ink);border:2px solid #1565c0;border-radius:14px;padding:12px 14px;z-index:80;box-shadow:0 14px 34px rgba(0,0,0,.5);transform-origin:top right}
       .presas-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
       .presas-head strong{font-family:"Bricolage Grotesque",sans-serif;font-size:1.15rem}
       .presas-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line)}
@@ -1185,7 +1185,7 @@ alter table orders add column if not exists pagado boolean not null default fals
       <section class="panel-sec s8" id="sec-pizarra" aria-labelledby="hPizarra" hidden>
         <div class="sec-head"><span class="sec-num">8</span><h2 id="hPizarra">Pizarra de pedidos</h2></div>
         <p class="sec-tag">8 · Pizarra — aquí llegan los pedidos como en tu pizarra de la cocina.</p>
-        <p class="sec-sub">Cada pedido es un <strong>cuadro</strong>: arriba el cliente y su dirección, la fecha y la hora (AM/PM) y si es delivery, mesa o recojo; abajo cada producto con su cantidad, sus cremas y si es con o sin arroz y con o sin ensalada, y cómo pagó el cliente (<strong>Pago: Yape</strong> o <strong>Pago: Efectivo</strong>). Como primero entregas y algunos pagan después, cada cuadro trae un botón grande de pago: <strong style="color:#e65100">FALTA PAGAR</strong> cuando todavía no paga y <strong style="color:#1e7d46">✓ PAGADO</strong> cuando ya pagó — tócalo para cambiarlo y se guarda al momento. Arriba ves el resumen <strong>«Faltan pagar»</strong> con cuánto te deben en total, y con el filtro <strong>Faltan pagar</strong> ves solo los pedidos sin pagar, de hoy y de días anteriores. Cuando ya lo preparaste y lo entregaste, pulsa <strong>✕ ENTREGADO</strong> y el cuadro queda tachado con una X grande. Con <strong>Eliminar pedido</strong> borras para siempre un pedido de prueba. La pizarra se actualiza sola cada 15 segundos. En <strong>📺 Pantalla completa</strong> (para tu pantalla grande) los pedidos salen más pequeños: se ven <strong>8 por pantalla</strong>, las opciones de cada pedido van escondidas tras un solo botón <strong>«Acciones»</strong> — al tocarlo se despliegan <strong>FALTA PAGAR / ✓ PAGADO, ENTREGADO, Cancelar pedido y Eliminar pedido</strong>, y la pastillita de la tarjeta te sigue mostrando si ya pagó o falta pagar — para que el pedido se lea completo sin que los botones ocupen espacio, y con los botones <strong>← Anterior</strong> y <strong>Siguiente →</strong> de abajo pasas a los demás pedidos. Con el botón <strong>🔊 Voz</strong> la pizarra lee en voz alta cada pedido nuevo apenas llega — cliente, modalidad, productos con sus cremas, total y pago — y en <strong>«Voz que lee los pedidos»</strong> escoges cuál de las voces de tu celular o computadora quieres que lea (queda guardada en ese aparato), y con <strong>Probar voz</strong> escuchas un ejemplo con la voz escogida antes de prenderla. Con los botones <strong>Hoy</strong> y <strong>Ayer</strong>, o eligiendo un día en el <strong>calendario</strong>, ves los pedidos de <strong>cualquier día anterior</strong> para sacar tu cuenta: los filtros y el resumen «Faltan pagar» son de ese día, el botón <strong>FALTA PAGAR / ✓ PAGADO</strong> funciona igual en cualquier día, y la voz solo lee pedidos cuando estás viendo <strong>hoy</strong>. En pantalla completa, con el control <strong>«Tamaño»</strong> de la barra de arriba (el deslizador o los botones <strong>−</strong> y <strong>+</strong>) achicas o agrandas la pizarra a tu gusto — al achicarla caben más pedidos por fila — y el tamaño queda guardado en ese aparato.</p>
+        <p class="sec-sub">Cada pedido es un <strong>cuadro</strong>: arriba el cliente y su dirección, la fecha y la hora (AM/PM) y si es delivery, mesa o recojo; abajo cada producto con su cantidad, sus cremas y si es con o sin arroz y con o sin ensalada, y cómo pagó el cliente (<strong>Pago: Yape</strong> o <strong>Pago: Efectivo</strong>). Como primero entregas y algunos pagan después, cada cuadro trae un botón grande de pago: <strong style="color:#e65100">FALTA PAGAR</strong> cuando todavía no paga y <strong style="color:#1e7d46">✓ PAGADO</strong> cuando ya pagó — tócalo para cambiarlo y se guarda al momento. Arriba ves el resumen <strong>«Faltan pagar»</strong> con cuánto te deben en total, y con el filtro <strong>Faltan pagar</strong> ves solo los pedidos sin pagar, de hoy y de días anteriores. Cuando ya lo preparaste y lo entregaste, pulsa <strong>✕ ENTREGADO</strong> y el cuadro queda tachado con una X grande. Con <strong>Eliminar pedido</strong> borras para siempre un pedido de prueba. La pizarra se actualiza sola cada 15 segundos. En <strong>📺 Pantalla completa</strong> (para tu pantalla grande) los pedidos salen más pequeños: se ven <strong>8 por pantalla</strong>, las opciones de cada pedido van escondidas tras un solo botón <strong>«Acciones»</strong> — al tocarlo se despliegan <strong>FALTA PAGAR / ✓ PAGADO, ENTREGADO, Cancelar pedido y Eliminar pedido</strong>, y la pastillita de la tarjeta te sigue mostrando si ya pagó o falta pagar — para que el pedido se lea completo sin que los botones ocupen espacio, y con los botones <strong>← Anterior</strong> y <strong>Siguiente →</strong> de abajo pasas a los demás pedidos. Con el botón <strong>🔊 Voz</strong> la pizarra lee en voz alta cada pedido nuevo apenas llega — cliente, modalidad, productos con sus cremas, total y pago — y en <strong>«Voz que lee los pedidos»</strong> escoges cuál de las voces de tu celular o computadora quieres que lea (queda guardada en ese aparato), y con <strong>Probar voz</strong> escuchas un ejemplo con la voz escogida antes de prenderla. Con los botones <strong>Hoy</strong> y <strong>Ayer</strong>, o eligiendo un día en el <strong>calendario</strong>, ves los pedidos de <strong>cualquier día anterior</strong> para sacar tu cuenta: los filtros y el resumen «Faltan pagar» son de ese día, el botón <strong>FALTA PAGAR / ✓ PAGADO</strong> funciona igual en cualquier día, y la voz solo lee pedidos cuando estás viendo <strong>hoy</strong>. En pantalla completa, con el control <strong>«Tamaño»</strong> de la barra de arriba (el deslizador o los botones <strong>−</strong> y <strong>+</strong>) achicas o agrandas la pizarra a tu gusto — al achicarla caben más pedidos por fila: bajando el tamaño en el celular caben <strong>4 pedidos en una línea</strong> — y el cuadro de <strong>🍗 Presas</strong> se achica o agranda con el mismo tamaño. El tamaño queda guardado en ese aparato.</p>
         <div class="tv-bar" id="tvBar">
           <div class="tv-title">Pizarra de pedidos · Anita Broaster</div>
           <button class="btn voice-off" type="button" id="btnVoiceToggleTv" aria-pressed="false">🔇 Voz: apagada</button>
@@ -1193,7 +1193,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           <div class="tv-size" role="group" aria-label="Tamaño de la pizarra en pantalla completa">
             <span class="tv-size-lab">Tamaño</span>
             <button class="btn tv-size-btn" type="button" id="btnTvSizeMinus" aria-label="Achicar la pizarra">−</button>
-            <input type="range" id="tvSizeRange" min="60" max="140" step="5" value="100" aria-label="Tamaño de la pizarra: desliza para achicar o agrandar" />
+            <input type="range" id="tvSizeRange" min="30" max="140" step="5" value="100" aria-label="Tamaño de la pizarra: desliza para achicar o agrandar" />
             <button class="btn tv-size-btn" type="button" id="btnTvSizePlus" aria-label="Agrandar la pizarra">+</button>
             <span class="tv-size-val" id="tvSizeVal">100%</span>
           </div>
@@ -3471,6 +3471,10 @@ alter table orders add column if not exists pagado boolean not null default fals
       function openCreamPicker(name, isSalad){
         creamPicker.name = name; creamPicker.isSalad = !!isSalad; creamPicker.checked = {};
         var box = $("creamPicker"); if (!box) return;
+        // El botón «Agregar a los elegidos» es fijo en el HTML: si una
+        // agregada anterior lo dejó deshabilitado, aquí se reactiva siempre
+        // para poder elegir otro plato (u otra crema) sin recargar la página.
+        var bc = $("btnPickerConfirm"); if (bc){ bc.disabled = false; bc.textContent = "Agregar a los elegidos"; }
         $("creamPickerTitle").textContent = "¿A qué platos le pongo «" + name + "»?";
         var s = $("creamPickerSearch"); if (s) s.value = "";
         renderCreamPickerList();
@@ -3528,6 +3532,7 @@ alter table orders add column if not exists pagado boolean not null default fals
         .then(function(res){
           if (!res.ok){ if (isRls(res)){ toast("Para agregar cremas primero completa la sección 7 · Activación (una sola vez).", true); showTab("activacion"); } else { toast("No se pudo agregar la crema.", true); } if (btn) btn.disabled = false; return; }
           toast("«" + name + "» agregada a " + count + (count === 1 ? " plato" : " platos") + ". Ya aparece en la carta.");
+          if (btn) btn.disabled = false;
           closeCreamPicker();
           loadAll();
         }).catch(function(){ if (btn) btn.disabled = false; toast("No se pudo agregar la crema. Revisa tu conexión.", true); });
@@ -4482,31 +4487,43 @@ alter table orders add column if not exists pagado boolean not null default fals
       // arriba no se achica y la pizarra normal no cambia. Al achicar, además
       // entran más tarjetas por fila (se recalculan las columnas). El tamaño
       // elegido se guarda en este aparato (localStorage); por defecto 100%.
+      // El deslizador baja hasta 30%: en el celular (apaisado, y en vertical
+      // al mínimo) así caben 4 pedidos en una línea. El cuadro de Presas
+      // (#presasBox) se escala con el MISMO tamaño (transform desde su
+      // esquina de arriba a la derecha, donde está anclado), porque es fijo
+      // y queda fuera del zoom del tablero.
       var pizZoom = 100;
       try {
         var zSaved = parseInt(window.localStorage.getItem("anita_panel_piz_zoom") || "100", 10);
-        if (isFinite(zSaved) && zSaved >= 60 && zSaved <= 140) pizZoom = zSaved;
+        if (isFinite(zSaved) && zSaved >= 30 && zSaved <= 140) pizZoom = zSaved;
       } catch(e){}
       function applyTvSize(){
         var board = $("pizarraBoard"); if (!board) return;
         var val = $("tvSizeVal"); if (val) val.textContent = pizZoom + "%";
         var rng = $("tvSizeRange"); if (rng && String(rng.value) !== String(pizZoom)) rng.value = String(pizZoom);
+        var presas = $("presasBox");
         if (document.body.classList.contains("tv")){
           board.style.zoom = String(pizZoom / 100);
           // Columnas según el ancho de la pantalla (como las reglas de
-          // siempre: 4 / 2 / 1) divididas por el zoom: al achicar caben más
-          // tarjetas por fila y al agrandar, menos pero más grandes.
+          // siempre: 4 / 2 / 1) divididas por el zoom, redondeando HACIA
+          // ARRIBA: al achicar caben más tarjetas por fila y al agrandar,
+          // menos pero más grandes. Con el redondeo hacia arriba, en el
+          // celular apaisado ya salen 4 por fila al bajar de 60%, y en
+          // vertical salen 4 al llegar al mínimo (30%).
           var baseCols = window.innerWidth > 1100 ? 4 : (window.innerWidth > 560 ? 2 : 1);
-          var cols = Math.max(1, Math.min(8, Math.round(baseCols / (pizZoom / 100))));
+          var cols = Math.max(1, Math.min(8, Math.ceil(baseCols / (pizZoom / 100))));
           board.style.gridTemplateColumns = "repeat(" + cols + ", minmax(0, 1fr))";
+          // El cuadro de Presas se achica o agranda con el mismo tamaño.
+          if (presas) presas.style.transform = "scale(" + String(pizZoom / 100) + ")";
         } else {
           board.style.zoom = "";
           board.style.gridTemplateColumns = "";
+          if (presas) presas.style.transform = "";
         }
       }
       function setTvSize(z){
         z = Math.round(Number(z) || 100);
-        pizZoom = Math.max(60, Math.min(140, z));
+        pizZoom = Math.max(30, Math.min(140, z));
         try { window.localStorage.setItem("anita_panel_piz_zoom", String(pizZoom)); } catch(e){}
         applyTvSize();
       }
