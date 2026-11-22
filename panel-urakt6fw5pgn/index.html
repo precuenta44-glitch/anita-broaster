@@ -357,6 +357,14 @@
       .piz-filters button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer;min-height:2.75rem}
       .piz-filters button.active{background:#1565c0;border-color:#1565c0;color:#fff}
       .piz-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+      /* Selector de día de la pizarra: Hoy / Ayer / calendario */
+      .piz-daybar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 4px}
+      .piz-daybar button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer;min-height:2.75rem}
+      .piz-daybar button.active{background:#1565c0;border-color:#1565c0;color:#fff}
+      .piz-daybar label{font-weight:700}
+      .piz-daybar input[type="date"]{width:auto;min-height:2.75rem;padding:8px 12px}
+      .piz-day-name{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.12rem}
+      body.tv .piz-day-name{font-size:1.02rem}
       /* Voz que lee los pedidos nuevos de la pizarra */
       .piz-voice{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 2px}
       .piz-voice .btn{min-height:2.75rem}
@@ -450,6 +458,13 @@
       .tv-bar{display:none}
       body.tv .tv-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
       .tv-bar .tv-title{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.5rem}
+      /* Control de tamaño de la pizarra en pantalla completa: vive en la barra
+         superior, que NO se achica; el zoom se aplica solo al tablero de tarjetas */
+      .tv-size{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:6px 10px}
+      .tv-size .tv-size-lab{font-weight:800;white-space:nowrap}
+      .tv-size input[type="range"]{width:150px;max-width:32vw;min-height:2.75rem;accent-color:#1565c0;cursor:pointer}
+      .tv-size .tv-size-btn{width:2.75rem;height:2.75rem;min-width:2.75rem;padding:0;font-size:1.35rem;font-weight:800;line-height:1}
+      .tv-size .tv-size-val{font-weight:800;min-width:3.6ch;text-align:right}
       body.tv .statusbar,body.tv .topnav,body.tv .hero,body.tv .alert,body.tv .foot,body.tv .tv-open-btn,
       body.tv #sec-pizarra .sec-head,body.tv #sec-pizarra .sec-tag,body.tv #sec-pizarra .sec-sub,
       body.tv #sec-pizarra .piz-stats,body.tv #sec-pizarra .piz-filters,body.tv #sec-pizarra .sec-nav{display:none}
@@ -1143,11 +1158,18 @@ alter table orders add column if not exists pagado boolean not null default fals
       <section class="panel-sec s8" id="sec-pizarra" aria-labelledby="hPizarra" hidden>
         <div class="sec-head"><span class="sec-num">8</span><h2 id="hPizarra">Pizarra de pedidos</h2></div>
         <p class="sec-tag">8 · Pizarra — aquí llegan los pedidos como en tu pizarra de la cocina.</p>
-        <p class="sec-sub">Cada pedido es un <strong>cuadro</strong>: arriba el cliente y su dirección, la fecha y la hora (AM/PM) y si es delivery, mesa o recojo; abajo cada producto con su cantidad, sus cremas y si es con o sin arroz y con o sin ensalada, y cómo pagó el cliente (<strong>Pago: Yape</strong> o <strong>Pago: Efectivo</strong>). Como primero entregas y algunos pagan después, cada cuadro trae un botón grande de pago: <strong style="color:#e65100">FALTA PAGAR</strong> cuando todavía no paga y <strong style="color:#1e7d46">✓ PAGADO</strong> cuando ya pagó — tócalo para cambiarlo y se guarda al momento. Arriba ves el resumen <strong>«Faltan pagar»</strong> con cuánto te deben en total, y con el filtro <strong>Faltan pagar</strong> ves solo los pedidos sin pagar, de hoy y de días anteriores. Cuando ya lo preparaste y lo entregaste, pulsa <strong>✕ ENTREGADO</strong> y el cuadro queda tachado con una X grande. Con <strong>Eliminar pedido</strong> borras para siempre un pedido de prueba. La pizarra se actualiza sola cada 15 segundos. En <strong>📺 Pantalla completa</strong> (para tu pantalla grande) los pedidos salen más pequeños: se ven <strong>8 por pantalla</strong>, las opciones de cada pedido van escondidas tras un solo botón <strong>«Acciones»</strong> — al tocarlo se despliegan <strong>FALTA PAGAR / ✓ PAGADO, ENTREGADO, Cancelar pedido y Eliminar pedido</strong>, y la pastillita de la tarjeta te sigue mostrando si ya pagó o falta pagar — para que el pedido se lea completo sin que los botones ocupen espacio, y con los botones <strong>← Anterior</strong> y <strong>Siguiente →</strong> de abajo pasas a los demás pedidos. Con el botón <strong>🔊 Voz</strong> la pizarra lee en voz alta cada pedido nuevo apenas llega — cliente, modalidad, productos con sus cremas, total y pago — y en <strong>«Voz que lee los pedidos»</strong> escoges cuál de las voces de tu celular o computadora quieres que lea (queda guardada en ese aparato), y con <strong>Probar voz</strong> escuchas un ejemplo con la voz escogida antes de prenderla.</p>
+        <p class="sec-sub">Cada pedido es un <strong>cuadro</strong>: arriba el cliente y su dirección, la fecha y la hora (AM/PM) y si es delivery, mesa o recojo; abajo cada producto con su cantidad, sus cremas y si es con o sin arroz y con o sin ensalada, y cómo pagó el cliente (<strong>Pago: Yape</strong> o <strong>Pago: Efectivo</strong>). Como primero entregas y algunos pagan después, cada cuadro trae un botón grande de pago: <strong style="color:#e65100">FALTA PAGAR</strong> cuando todavía no paga y <strong style="color:#1e7d46">✓ PAGADO</strong> cuando ya pagó — tócalo para cambiarlo y se guarda al momento. Arriba ves el resumen <strong>«Faltan pagar»</strong> con cuánto te deben en total, y con el filtro <strong>Faltan pagar</strong> ves solo los pedidos sin pagar, de hoy y de días anteriores. Cuando ya lo preparaste y lo entregaste, pulsa <strong>✕ ENTREGADO</strong> y el cuadro queda tachado con una X grande. Con <strong>Eliminar pedido</strong> borras para siempre un pedido de prueba. La pizarra se actualiza sola cada 15 segundos. En <strong>📺 Pantalla completa</strong> (para tu pantalla grande) los pedidos salen más pequeños: se ven <strong>8 por pantalla</strong>, las opciones de cada pedido van escondidas tras un solo botón <strong>«Acciones»</strong> — al tocarlo se despliegan <strong>FALTA PAGAR / ✓ PAGADO, ENTREGADO, Cancelar pedido y Eliminar pedido</strong>, y la pastillita de la tarjeta te sigue mostrando si ya pagó o falta pagar — para que el pedido se lea completo sin que los botones ocupen espacio, y con los botones <strong>← Anterior</strong> y <strong>Siguiente →</strong> de abajo pasas a los demás pedidos. Con el botón <strong>🔊 Voz</strong> la pizarra lee en voz alta cada pedido nuevo apenas llega — cliente, modalidad, productos con sus cremas, total y pago — y en <strong>«Voz que lee los pedidos»</strong> escoges cuál de las voces de tu celular o computadora quieres que lea (queda guardada en ese aparato), y con <strong>Probar voz</strong> escuchas un ejemplo con la voz escogida antes de prenderla. Con los botones <strong>Hoy</strong> y <strong>Ayer</strong>, o eligiendo un día en el <strong>calendario</strong>, ves los pedidos de <strong>cualquier día anterior</strong> para sacar tu cuenta: los filtros y el resumen «Faltan pagar» son de ese día, el botón <strong>FALTA PAGAR / ✓ PAGADO</strong> funciona igual en cualquier día, y la voz solo lee pedidos cuando estás viendo <strong>hoy</strong>. En pantalla completa, con el control <strong>«Tamaño»</strong> de la barra de arriba (el deslizador o los botones <strong>−</strong> y <strong>+</strong>) achicas o agrandas la pizarra a tu gusto — al achicarla caben más pedidos por fila — y el tamaño queda guardado en ese aparato.</p>
         <div class="tv-bar" id="tvBar">
           <div class="tv-title">Pizarra de pedidos · Anita Broaster</div>
           <button class="btn voice-off" type="button" id="btnVoiceToggleTv" aria-pressed="false">🔇 Voz: apagada</button>
           <button class="btn" type="button" id="btnPresas" aria-expanded="false" aria-controls="presasBox">🍗 Presas</button>
+          <div class="tv-size" role="group" aria-label="Tamaño de la pizarra en pantalla completa">
+            <span class="tv-size-lab">Tamaño</span>
+            <button class="btn tv-size-btn" type="button" id="btnTvSizeMinus" aria-label="Achicar la pizarra">−</button>
+            <input type="range" id="tvSizeRange" min="60" max="140" step="5" value="100" aria-label="Tamaño de la pizarra: desliza para achicar o agrandar" />
+            <button class="btn tv-size-btn" type="button" id="btnTvSizePlus" aria-label="Agrandar la pizarra">+</button>
+            <span class="tv-size-val" id="tvSizeVal">100%</span>
+          </div>
           <button class="btn" type="button" id="btnTvExit">Salir ✕</button>
         </div>
         <div class="presas-box" id="presasBox" role="dialog" aria-label="Presas que quedan">
@@ -1174,10 +1196,17 @@ alter table orders add column if not exists pagado boolean not null default fals
             <span class="hint" style="margin:0">Escoge la voz que más te guste, pruébala con «Probar voz» y queda guardada en este aparato.</span>
           </div>
         </div>
+        <div class="piz-daybar" role="group" aria-label="Día de los pedidos de la pizarra">
+          <button type="button" id="btnPizHoy" class="active">Hoy</button>
+          <button type="button" id="btnPizAyer">Ayer</button>
+          <label for="pizDate">Día:</label>
+          <input type="date" id="pizDate" aria-label="Elegir cualquier día para ver sus pedidos" />
+          <span class="piz-day-name" id="pizDayName">Pedidos de hoy</span>
+        </div>
         <div class="piz-unpaid-banner" id="pizUnpaidSummary" role="status">Faltan pagar: 0 pedidos — S/ 0.00 por cobrar</div>
         <div class="piz-stats">
           <div class="piz-stat"><div class="lab">Pedidos pendientes</div><div class="val" id="pizPendingCount">0</div></div>
-          <div class="piz-stat"><div class="lab">Entregados hoy</div><div class="val" id="pizDeliveredCount">0</div></div>
+          <div class="piz-stat"><div class="lab" id="pizDeliveredLab">Entregados hoy</div><div class="val" id="pizDeliveredCount">0</div></div>
           <div class="piz-stat"><div class="lab">Faltan pagar</div><div class="val" id="pizUnpaidCount">0</div></div>
         </div>
         <div class="piz-filters" role="group" aria-label="Filtrar pedidos de la pizarra">
@@ -3788,6 +3817,41 @@ alter table orders add column if not exists pagado boolean not null default fals
       var pizLastList = [];
       var pizLastByOrder = {};
       var PENDING_STATUS = ["nuevo","preparando","listo","en_camino"];
+      // Día que se está viendo en la pizarra (YYYY-MM-DD, hora de Lima). Por
+      // defecto hoy; con «Hoy» / «Ayer» / el calendario se ven los pedidos de
+      // días anteriores para sacar la cuenta. Los filtros (Pendientes /
+      // Entregados / Todos / Faltan pagar) y el resumen «Faltan pagar» son de
+      // ese día; la voz solo lee pedidos nuevos cuando se está viendo hoy.
+      var pizDay = limaToday();
+      function pizIsToday(){ return pizDay === limaToday(); }
+      function limaYesterday(){
+        var d = new Date(limaToday() + "T12:00:00.000Z");
+        d.setTime(d.getTime() - 24 * 3600 * 1000);
+        return d.toISOString().slice(0, 10);
+      }
+      function pizDayLong(){
+        try {
+          var d = new Date(pizDay + "T12:00:00-05:00");
+          var wd = new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", weekday: "long" }).format(d);
+          var rest = new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", day: "numeric", month: "short", year: "numeric" }).format(d).replace(/\./g, "");
+          return wd + " " + rest;
+        } catch(e){ return pizDay; }
+      }
+      function syncPizDayUI(){
+        var inp = $("pizDate"); if (inp && inp.value !== pizDay) inp.value = pizDay;
+        var name = $("pizDayName");
+        if (name) name.textContent = pizIsToday() ? "Pedidos de hoy" : ("Pedidos del " + pizDayLong());
+        var bHoy = $("btnPizHoy"); if (bHoy) bHoy.classList.toggle("active", pizIsToday());
+        var bAyer = $("btnPizAyer"); if (bAyer) bAyer.classList.toggle("active", pizDay === limaYesterday());
+        var lab = $("pizDeliveredLab"); if (lab) lab.textContent = pizIsToday() ? "Entregados hoy" : "Entregados ese día";
+      }
+      function setPizDay(dstr){
+        if (!dstr) return;
+        pizDay = dstr;
+        pizPage = 0;
+        syncPizDayUI();
+        loadPizarra();
+      }
       // ---------- voz que lee los pedidos nuevos de la pizarra ----------
       // Usa la voz del navegador (window.speechSynthesis), en español, de
       // hombre y con acento mexicano si el dispositivo tiene una voz es-MX.
@@ -4050,10 +4114,11 @@ alter table orders add column if not exists pagado boolean not null default fals
         });
       }
       function loadPizarra(){
-        var today = limaToday(); var r = limaRange(today);
-        var qPend = "orders?select=*&code=neq.QR-TEST01&status=in.(nuevo,preparando,listo,en_camino)&order=created_at.asc";
-        var qDel = "orders?select=*&code=neq.QR-TEST01&status=eq.entregado&created_at=gte." + encodeURIComponent(r.start) + "&created_at=lt." + encodeURIComponent(r.end) + "&order=created_at.desc";
-        var qUnpaid = "orders?select=*&code=neq.QR-TEST01&status=neq.cancelado&or=(pagado.eq.false,pagado.is.null)&order=created_at.asc";
+        var r = limaRange(pizDay);
+        var rangeQ = "&created_at=gte." + encodeURIComponent(r.start) + "&created_at=lt." + encodeURIComponent(r.end);
+        var qPend = "orders?select=*&code=neq.QR-TEST01&status=in.(nuevo,preparando,listo,en_camino)" + rangeQ + "&order=created_at.asc";
+        var qDel = "orders?select=*&code=neq.QR-TEST01&status=eq.entregado" + rangeQ + "&order=created_at.desc";
+        var qUnpaid = "orders?select=*&code=neq.QR-TEST01&status=neq.cancelado&or=(pagado.eq.false,pagado.is.null)" + rangeQ + "&order=created_at.asc";
         return Promise.all([api(qPend), api(qDel), api(qUnpaid)]).then(function(rs){
           var pend = rs[0].ok ? (rs[0].data || []) : [];
           var del = rs[1].ok ? (rs[1].data || []) : [];
@@ -4065,9 +4130,10 @@ alter table orders add column if not exists pagado boolean not null default fals
             var seen = {}; var all = [];
             pend.concat(del).concat(pizUnpaidList).forEach(function(o){ if (o && !seen[o.id]){ seen[o.id] = 1; all.push(o); } });
             if (!all.length){
-              cacheSet("pizarra", { pend: [], del: [], unpaid: [], byOrder: {} });
-              vozLastPend = pend; vozDetect(pend, {});
-              var fpVacia = JSON.stringify([pizFilter, [], {}, document.body.classList.contains("tv")]);
+              if (pizIsToday()) cacheSet("pizarra", { pend: [], del: [], unpaid: [], byOrder: {} });
+              // La voz solo lee pedidos nuevos cuando se está viendo hoy; en un día pasado no lee nada.
+              vozLastPend = pend; if (pizIsToday()) vozDetect(pend, {});
+              var fpVacia = JSON.stringify([pizDay, pizFilter, [], {}, document.body.classList.contains("tv")]);
               if (fpVacia !== lastPizFp){ lastPizFp = fpVacia; renderPizarra([], {}); }
               $("pizEstado").textContent = "Sin pedidos por mostrar.";
               return;
@@ -4076,23 +4142,25 @@ alter table orders add column if not exists pagado boolean not null default fals
             return api("order_items?select=*&order_id=in.(" + ids + ")").then(function(ires){
               var byOrder = {};
               (ires.ok ? (ires.data || []) : []).forEach(function(it){ (byOrder[it.order_id] = byOrder[it.order_id] || []).push(it); });
-              cacheSet("pizarra", { pend: pend, del: del, unpaid: pizUnpaidList, byOrder: byOrder });
-              vozLastPend = pend; vozDetect(pend, byOrder);
+              // La copia guardada es solo del día de hoy (es la que se pinta al abrir el panel).
+              if (pizIsToday()) cacheSet("pizarra", { pend: pend, del: del, unpaid: pizUnpaidList, byOrder: byOrder });
+              vozLastPend = pend; if (pizIsToday()) vozDetect(pend, byOrder);
               var list;
               if (pizFilter === "pendientes") list = pend;
               else if (pizFilter === "entregados") list = del;
               else if (pizFilter === "faltan") list = pizUnpaidList;
               else list = pend.concat(del).sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
-              // La huella incluye si está en pantalla completa: al entrar o salir
-              // del modo TV hay que repintar sí o sí (las tarjetas se arman distinto).
-              var fp = JSON.stringify([pizFilter, list, byOrder, document.body.classList.contains("tv")]);
+              // La huella incluye el día elegido y si está en pantalla completa:
+              // al cambiar de día o al entrar/salir del modo TV hay que repintar
+              // sí o sí (las tarjetas se arman distinto).
+              var fp = JSON.stringify([pizDay, pizFilter, list, byOrder, document.body.classList.contains("tv")]);
               if (fp !== lastPizFp || Date.now() - lastPizRenderAt > 60000){ lastPizFp = fp; lastPizRenderAt = Date.now(); renderPizarra(list, byOrder); }
               $("pizEstado").textContent = "Actualizado " + new Date().toLocaleTimeString("es-PE", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
             });
           }
           if (rs[2] && rs[2].ok) return finish(rs[2].data || []);
           // La columna «pagado» todavía no existe: no romper la pizarra; todo pedido no cancelado cuenta como no pagado.
-          return api("orders?select=*&code=neq.QR-TEST01&status=neq.cancelado&order=created_at.asc&limit=500").then(function(rAll){
+          return api("orders?select=*&code=neq.QR-TEST01&status=neq.cancelado" + rangeQ + "&order=created_at.asc&limit=500").then(function(rAll){
             if (rAll && rAll.ok) return finish((rAll.data || []).filter(function(o){ return !isPaid(o); }));
             var seen2 = {}; var fb = [];
             pend.concat(del).forEach(function(o){ if (!seen2[o.id] && !isPaid(o)){ seen2[o.id] = 1; fb.push(o); } });
@@ -4120,7 +4188,8 @@ alter table orders add column if not exists pagado boolean not null default fals
         pizLastByOrder = byOrder || {};
         var board = $("pizarraBoard"); board.innerHTML = "";
         if (!list.length){
-          board.innerHTML = '<div class="empty">' + (pizFilter === "entregados" ? "Todavía no hay pedidos entregados hoy." : (pizFilter === "faltan" ? "¡Nadie debe! No hay pedidos sin pagar." : (pizFilter === "todos" ? "No hay pedidos pendientes ni entregados hoy." : "¡Todo entregado! No hay pedidos pendientes."))) + "</div>";
+          var hoyTxt = pizIsToday();
+          board.innerHTML = '<div class="empty">' + (pizFilter === "entregados" ? (hoyTxt ? "Todavía no hay pedidos entregados hoy." : "No hay pedidos entregados ese día.") : (pizFilter === "faltan" ? "¡Nadie debe! No hay pedidos sin pagar." : (pizFilter === "todos" ? (hoyTxt ? "No hay pedidos pendientes ni entregados hoy." : "No hay pedidos ese día.") : "¡Todo entregado! No hay pedidos pendientes."))) + "</div>";
           updatePizPager(0, 1, document.body.classList.contains("tv"));
           return;
         }
@@ -4267,6 +4336,9 @@ alter table orders add column if not exists pagado boolean not null default fals
         });
       });
       if ($("btnPizRefresh")) $("btnPizRefresh").addEventListener("click", function(){ loadPizarra(); });
+      if ($("btnPizHoy")) $("btnPizHoy").addEventListener("click", function(){ setPizDay(limaToday()); });
+      if ($("btnPizAyer")) $("btnPizAyer").addEventListener("click", function(){ setPizDay(limaYesterday()); });
+      if ($("pizDate")) $("pizDate").addEventListener("change", function(){ if (this.value) setPizDay(this.value); else syncPizDayUI(); });
       if ($("btnPizPrev")) $("btnPizPrev").addEventListener("click", function(){
         if (pizPage <= 0) return;
         pizPage--;
@@ -4287,10 +4359,51 @@ alter table orders add column if not exists pagado boolean not null default fals
       });
       setInterval(function(){ loadPizarra(); if (presasOpen) refreshPresas(); }, 15000);
 
+      // ---------- tamaño de la pizarra en pantalla completa ----------
+      // El dueño achica o agranda la pizarra a su gusto con el deslizador o
+      // los botones − / + de la barra superior. Se aplica la propiedad CSS
+      // «zoom» SOLO sobre el tablero de tarjetas (#pizarraBoard): la barra de
+      // arriba no se achica y la pizarra normal no cambia. Al achicar, además
+      // entran más tarjetas por fila (se recalculan las columnas). El tamaño
+      // elegido se guarda en este aparato (localStorage); por defecto 100%.
+      var pizZoom = 100;
+      try {
+        var zSaved = parseInt(window.localStorage.getItem("anita_panel_piz_zoom") || "100", 10);
+        if (isFinite(zSaved) && zSaved >= 60 && zSaved <= 140) pizZoom = zSaved;
+      } catch(e){}
+      function applyTvSize(){
+        var board = $("pizarraBoard"); if (!board) return;
+        var val = $("tvSizeVal"); if (val) val.textContent = pizZoom + "%";
+        var rng = $("tvSizeRange"); if (rng && String(rng.value) !== String(pizZoom)) rng.value = String(pizZoom);
+        if (document.body.classList.contains("tv")){
+          board.style.zoom = String(pizZoom / 100);
+          // Columnas según el ancho de la pantalla (como las reglas de
+          // siempre: 4 / 2 / 1) divididas por el zoom: al achicar caben más
+          // tarjetas por fila y al agrandar, menos pero más grandes.
+          var baseCols = window.innerWidth > 1100 ? 4 : (window.innerWidth > 560 ? 2 : 1);
+          var cols = Math.max(1, Math.min(8, Math.round(baseCols / (pizZoom / 100))));
+          board.style.gridTemplateColumns = "repeat(" + cols + ", minmax(0, 1fr))";
+        } else {
+          board.style.zoom = "";
+          board.style.gridTemplateColumns = "";
+        }
+      }
+      function setTvSize(z){
+        z = Math.round(Number(z) || 100);
+        pizZoom = Math.max(60, Math.min(140, z));
+        try { window.localStorage.setItem("anita_panel_piz_zoom", String(pizZoom)); } catch(e){}
+        applyTvSize();
+      }
+      if ($("tvSizeRange")) $("tvSizeRange").addEventListener("input", function(){ setTvSize(this.value); });
+      if ($("btnTvSizeMinus")) $("btnTvSizeMinus").addEventListener("click", function(){ setTvSize(pizZoom - 5); });
+      if ($("btnTvSizePlus")) $("btnTvSizePlus").addEventListener("click", function(){ setTvSize(pizZoom + 5); });
+      window.addEventListener("resize", function(){ if (document.body.classList.contains("tv")) applyTvSize(); });
+
       // ---------- pizarra en pantalla completa (modo cocina / TV) ----------
       function enterTv(){
         pizPage = 0;
         document.body.classList.add("tv");
+        applyTvSize();
         showTab("sec-pizarra", false);
         // Repinta al momento ya en modo TV. Sin esto, las tarjetas pintadas en
         // la pizarra normal se quedan con los botones en línea y sin el botón
@@ -4309,6 +4422,7 @@ alter table orders add column if not exists pagado boolean not null default fals
       function exitTv(){
         setPresasOpen(false);
         document.body.classList.remove("tv");
+        applyTvSize();
         if (pizLastList) renderPizarra(pizLastList, pizLastByOrder);
         try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); } catch(e){}
         try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e){}
@@ -4321,6 +4435,7 @@ alter table orders add column if not exists pagado boolean not null default fals
         if (!document.fullscreenElement && document.body.classList.contains("tv")){
           setPresasOpen(false);
           document.body.classList.remove("tv");
+          applyTvSize();
           if (pizLastList) renderPizarra(pizLastList, pizLastByOrder);
         }
       });
@@ -4558,7 +4673,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           else if (pizFilter === "entregados") list = del;
           else if (pizFilter === "faltan") list = unpaid;
           else list = pend.concat(del).sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
-          lastPizFp = JSON.stringify([pizFilter, list, byOrder, false]);
+          lastPizFp = JSON.stringify([pizDay, pizFilter, list, byOrder, false]);
           lastPizRenderAt = Date.now();
           try { renderPizarra(list, byOrder); } catch(e){}
           $("pizEstado").textContent = "Mostrando los pedidos guardados · actualizando…";
@@ -4568,6 +4683,8 @@ alter table orders add column if not exists pagado boolean not null default fals
       // ---------- arranque ----------
       showTab("sec-platos", false);
       $("closeDate").value = limaToday();
+      syncPizDayUI();
+      applyTvSize();
       hydrateFromCache();
       loadAll();
       runProbes();
