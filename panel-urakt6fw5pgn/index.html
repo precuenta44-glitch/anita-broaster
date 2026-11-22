@@ -471,6 +471,22 @@
       body.tv .wrap{max-width:none;padding:12px}
       body.tv #sec-pizarra{margin-top:0;padding:14px}
       body.tv .tv-bar .tv-title{font-size:1.3rem}
+      /* Ocultar los controles de arriba en pantalla completa: se esconde la
+         barra (título, Voz, Presas, Tamaño, Salir), el selector de día y el
+         aviso «Faltan pagar», y queda solo el tablero de tarjetas, con dos
+         botones flotantes en las esquinas — «👁️ Mostrar» arriba a la
+         izquierda (vuelve a mostrar todo) y «🍗 Presas» arriba a la derecha.
+         Es solo de la sesión: al salir de pantalla completa todo vuelve. */
+      body.tv.tv-hidden .tv-bar,
+      body.tv.tv-hidden #sec-pizarra .piz-daybar,
+      body.tv.tv-hidden #sec-pizarra .piz-unpaid-banner{display:none}
+      body.tv.tv-hidden #sec-pizarra{padding-top:60px}
+      .tv-float{display:none}
+      body.tv.tv-hidden .tv-float{display:inline-flex;align-items:center;position:fixed;top:10px;z-index:90;min-height:2.75rem;padding:8px 14px;font-weight:800;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+      #btnTvShow{left:10px;background:#1565c0;border-color:#1565c0;color:#fff}
+      #btnTvShow:hover{background:#0d47a1;border-color:#0d47a1}
+      #btnPresasFloat{right:10px;background:#e8590c;border-color:#e8590c;color:#fff}
+      #btnPresasFloat:hover{background:#d9480f;border-color:#d9480f}
       /* En pantalla grande: tarjetas compactas, 8 por página (4 × 2) */
       body.tv .piz-board{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
       @media (max-width:1100px){ body.tv .piz-board{grid-template-columns:repeat(2,minmax(0,1fr))} }
@@ -1170,8 +1186,11 @@ alter table orders add column if not exists pagado boolean not null default fals
             <button class="btn tv-size-btn" type="button" id="btnTvSizePlus" aria-label="Agrandar la pizarra">+</button>
             <span class="tv-size-val" id="tvSizeVal">100%</span>
           </div>
+          <button class="btn" type="button" id="btnTvHide">👁️ Ocultar</button>
           <button class="btn" type="button" id="btnTvExit">Salir ✕</button>
         </div>
+        <button class="btn tv-float" type="button" id="btnTvShow">👁️ Mostrar</button>
+        <button class="btn tv-float" type="button" id="btnPresasFloat" aria-expanded="false" aria-controls="presasBox">🍗 Presas</button>
         <div class="presas-box" id="presasBox" role="dialog" aria-label="Presas que quedan">
           <div class="presas-head"><strong>🍗 Presas que quedan</strong><button class="btn ghost small" type="button" id="btnPresasClose" aria-label="Cerrar el cuadro de presas">✕</button></div>
           <div id="presasList"><div class="empty">Cargando…</div></div>
@@ -4402,6 +4421,7 @@ alter table orders add column if not exists pagado boolean not null default fals
       // ---------- pizarra en pantalla completa (modo cocina / TV) ----------
       function enterTv(){
         pizPage = 0;
+        setTvHidden(false); // al entrar, los controles siempre empiezan visibles
         document.body.classList.add("tv");
         applyTvSize();
         showTab("sec-pizarra", false);
@@ -4421,6 +4441,7 @@ alter table orders add column if not exists pagado boolean not null default fals
       }
       function exitTv(){
         setPresasOpen(false);
+        setTvHidden(false);
         document.body.classList.remove("tv");
         applyTvSize();
         if (pizLastList) renderPizarra(pizLastList, pizLastByOrder);
@@ -4434,11 +4455,27 @@ alter table orders add column if not exists pagado boolean not null default fals
       document.addEventListener("fullscreenchange", function(){
         if (!document.fullscreenElement && document.body.classList.contains("tv")){
           setPresasOpen(false);
+          setTvHidden(false);
           document.body.classList.remove("tv");
           applyTvSize();
           if (pizLastList) renderPizarra(pizLastList, pizLastByOrder);
         }
       });
+
+      // ---------- ocultar los controles de arriba en pantalla completa ----------
+      // Con «👁️ Ocultar» se esconde toda la zona de controles de arriba (barra
+      // con título, Voz, Presas, Tamaño y Salir, selector de día y aviso
+      // «Faltan pagar») y queda solo el tablero de tarjetas, con «👁️ Mostrar»
+      // flotando arriba a la izquierda y «🍗 Presas» flotando arriba a la
+      // derecha. El tamaño (zoom) elegido se sigue aplicando a las tarjetas.
+      // Es solo de la sesión (no se guarda): al salir de pantalla completa los
+      // controles vuelven a verse.
+      function setTvHidden(hidden){
+        document.body.classList.toggle("tv-hidden", !!hidden);
+      }
+      if ($("btnTvHide")) $("btnTvHide").addEventListener("click", function(){ setTvHidden(true); });
+      if ($("btnTvShow")) $("btnTvShow").addEventListener("click", function(){ setTvHidden(false); });
+      if ($("btnPresasFloat")) $("btnPresasFloat").addEventListener("click", function(){ setPresasOpen(!presasOpen); });
 
       // ---------- cuadro de presas (stock) en pantalla completa ----------
       // Como el cuadro de su pizarra blanca: cuántas presas quedan de cada
@@ -4553,9 +4590,10 @@ alter table orders add column if not exists pagado boolean not null default fals
       }
       function setPresasOpen(open){
         presasOpen = !!open;
-        var box = $("presasBox"), btn = $("btnPresas");
+        var box = $("presasBox"), btn = $("btnPresas"), fbtn = $("btnPresasFloat");
         if (box) box.classList.toggle("open", presasOpen);
         if (btn) btn.setAttribute("aria-expanded", presasOpen ? "true" : "false");
+        if (fbtn) fbtn.setAttribute("aria-expanded", presasOpen ? "true" : "false");
         if (presasOpen){ renderPresas(); refreshPresas(); }
         else setPresasPicker(false);
       }
