@@ -38,8 +38,9 @@ img{display:block;max-width:100%}
 .dot{width:9px;height:9px;border-radius:50%;background:#2EE06B;flex:none;animation:pulse 1.6s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(46,224,107,.5)}70%{box-shadow:0 0 0 8px rgba(46,224,107,0)}100%{box-shadow:0 0 0 0 rgba(46,224,107,0)}}
 @media(prefers-reduced-motion:reduce){.dot{animation:none}}
-.navchips{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 2px}
-.navchips a{flex:1;text-align:center;text-decoration:none;font-weight:800;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 8px;box-shadow:var(--shadow)}
+.navchips{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0 2px;padding-bottom:4px;scrollbar-width:none}
+.navchips::-webkit-scrollbar{display:none}
+.navchips a{flex:1 0 auto;text-align:center;white-space:nowrap;text-decoration:none;font-weight:800;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 8px;box-shadow:var(--shadow)}
 .navchips a:active{transform:scale(.98)}
 h2.sec{font-size:30px;font-weight:900;letter-spacing:.4px;text-transform:uppercase;margin:32px 0 4px;display:flex;align-items:center;gap:12px}
 h2.sec::after{content:"";flex:1;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--amber),transparent)}
@@ -174,7 +175,7 @@ a.wa{color:var(--green);font-weight:800}
   </div>
 </header>
 <main class="wrap">
-  <nav class="navchips" aria-label="Secciones de la carta">
+  <nav class="navchips" id="navChips" aria-label="Secciones de la carta">
     <a href="#platos">🍗 Platos</a>
     <a href="#bebidas">🥤 Bebidas</a>
     <a href="#cartTitle">🧾 Tu pedido</a>
@@ -375,7 +376,42 @@ if(!el)return;
 hashJumpDone=true;
 setTimeout(function(){el.scrollIntoView({behavior:"smooth",block:"start"})},80);
 }
+function navCategorias(){
+var raw=SETTINGS?SETTINGS.nav_categorias:null;
+if(raw==null)return[];
+var arr=null;
+if(Array.isArray(raw)){arr=raw}
+else if(typeof raw==="string"){
+var s=raw.trim();
+if(!s)return[];
+try{var p=JSON.parse(s);if(Array.isArray(p))arr=p;else return[]}catch(e){return[]}
+}else{return[]}
+var seen={},out=[];
+arr.forEach(function(x){
+if(typeof x!=="string")return;
+var t=x.trim();if(!t)return;
+var k=t.toLowerCase();
+if(seen[k])return;
+seen[k]=1;out.push(t);
+});
+return out;
+}
+function renderNav(){
+var nav=document.getElementById("navChips");
+if(!nav)return;
+var present={};
+menu.forEach(function(it){present[categoryOf(it).trim().toLowerCase()]=true});
+var cats=navCategorias().filter(function(name){return !!present[name.trim().toLowerCase()]});
+var html='<a href="#platos">🍗 Platos</a>';
+cats.forEach(function(name){
+html+='<a href="#cat-'+catSlug(name)+'">'+esc(name)+'</a>';
+});
+html+='<a href="#bebidas">🥤 Bebidas</a>';
+html+='<a href="#cartTitle">🧾 Tu pedido</a>';
+nav.innerHTML=html;
+}
 function renderMenu(){
+renderNav();
 var g=document.getElementById("menuGrid");g.innerHTML="";
 if(!menu.length){g.innerHTML='<p class="empty">No hay platos en la carta por ahora.</p>';return}
 var groups=[],byCat={};
