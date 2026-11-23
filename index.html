@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="color-scheme" content="light dark"/>
 <meta name="theme-color" content="#D93A0B"/>
-<link rel="preconnect" href="https://qswmaegxflkmvyqvlfoh.supabase.co" crossorigin/>
-<link rel="dns-prefetch" href="https://qswmaegxflkmvyqvlfoh.supabase.co"/>
+<link rel="preconnect" href="https://yfwskkspxexswufzuzua.supabase.co" crossorigin/>
+<link rel="dns-prefetch" href="https://yfwskkspxexswufzuzua.supabase.co"/>
 <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon.png"/>
 <link rel="shortcut icon" type="image/png" href="assets/favicon.png"/>
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
@@ -860,8 +860,8 @@ if(waWin){try{waWin.location.assign(waUrl)}catch(e){window.open(waUrl,"_blank")}
 else if(!window.open(waUrl,"_blank")){window.location.assign(waUrl)}
 });
 });
-var SUPA_URL="https://qswmaegxflkmvyqvlfoh.supabase.co";
-var SUPA_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzd21hZWd4ZmxrbXZ5cXZsZm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1NDU3OTIsImV4cCI6MjExMDEyMTc5Mn0.tejhyJpeZKEHXy3IjE_UP9g3nbuyhS3JWqp9VPDG1ns";
+var SUPA_URL="https://yfwskkspxexswufzuzua.supabase.co";
+var SUPA_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlmd3Nra3NweGV4c3d1Znp1enVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUzODUwNjksImV4cCI6MjExMDk2MTA2OX0.V_2oBVdbmvscUE9VBOJUZs2FY-BozuuBG_hl4IfPYGs";
 function supaHeaders(extra){
 var h={"apikey":SUPA_ANON,"Authorization":"Bearer "+SUPA_ANON};
 if(extra){for(var k in extra)h[k]=extra[k]}
@@ -1037,7 +1037,7 @@ return fetch(SUPA_URL+"/rest/v1/order_items",{method:"POST",headers:supaHeaders(
 }
 if(!hydrateFromCache()){renderMenu();renderDrinks();renderCart()}
 fetchMenu();
-setInterval(fetchMenu,15000);
+setInterval(fetchMenu,20000);
 document.addEventListener("visibilitychange",function(){if(!document.hidden)fetchMenu()});
 </script>
 <script>
