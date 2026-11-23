@@ -2404,15 +2404,34 @@ alter table orders add column if not exists pagado boolean not null default fals
         linkToggles(field(card, "ensalada"), field(card, "soloPapas"));
 
         // Stock: sumar rápido y reponer
+        // stockBase = el stock que este editor conoce del servidor. El guardado
+        // automático SOLO manda stock_quantity si el dueño lo cambió respecto
+        // a stockBase: antes lo mandaba siempre, con el número que el campo
+        // tenía al abrir el editor, y si un pedido ya había descontado stock
+        // en la base, editar la descripción (o el precio, o la foto) lo volvía
+        // a subir sin querer. Por eso parecía que «no descontaba».
+        var stockBase = stockOf(p);
         var stockInput = field(card, "stock");
         if (stockInput){
           card.querySelectorAll("[data-add-stock]").forEach(function(b){
             b.addEventListener("click", function(){
               var add = parseInt(b.getAttribute("data-add-stock"), 10) || 0;
-              var cur = parseStockInput(stockInput.value);
-              stockInput.value = String((cur === null ? 0 : cur) + add);
-              toast("Stock: " + stockInput.value + ". Se está guardando solo.");
-              scheduleSave();
+              // Se lee el stock REAL del servidor antes de sumar: en otro
+              // aparato (o por los pedidos) pudo ya haber bajado.
+              b.disabled = true;
+              api("products?select=stock_quantity&id=eq." + encodeURIComponent(p.id)).then(function(res){
+                var fresh = (res.ok && res.data && res.data.length) ? stockOf(res.data[0]) : stockBase;
+                stockBase = fresh;
+                p.stock_quantity = fresh;
+                stockInput.value = String((fresh === null ? 0 : fresh) + add);
+                toast("Stock: " + stockInput.value + ". Se está guardando solo.");
+                scheduleSave();
+              }).catch(function(){
+                var cur = parseStockInput(stockInput.value);
+                stockInput.value = String((cur === null ? 0 : cur) + add);
+                toast("Stock: " + stockInput.value + ". Se está guardando solo.");
+                scheduleSave();
+              }).then(function(){ b.disabled = false; });
             });
           });
           var repBtn = card.querySelector("[data-replenish]");
@@ -2463,10 +2482,15 @@ alter table orders add column if not exists pagado boolean not null default fals
             category: catVal,
             description: field(card, "description").value.trim(),
             price_cents: Math.max(0, Math.round(parseFloat(field(card, "price").value || "0") * 100)),
-            image_url: field(card, "image_url").value.trim(),
-            stock_quantity: stockVal
+            image_url: field(card, "image_url").value.trim()
           };
-          if (stockVal === 0) payload.available = false;
+          // El stock solo viaja si el dueño lo cambió en este editor. Si no
+          // lo tocó, la base conserva el suyo (con los pedidos ya
+          // descontados) y editar otra cosa no «resucita» stock vendido.
+          if (stockVal !== stockBase){
+            payload.stock_quantity = stockVal;
+            if (stockVal === 0) payload.available = false;
+          }
           return payload;
         }
         function refreshStockBadges(){
@@ -2496,7 +2520,7 @@ alter table orders add column if not exists pagado boolean not null default fals
           p.description = payload.description;
           p.price_cents = payload.price_cents;
           p.image_url = payload.image_url;
-          p.stock_quantity = payload.stock_quantity;
+          if (payload.stock_quantity !== undefined){ p.stock_quantity = payload.stock_quantity; stockBase = payload.stock_quantity; }
           if (payload.available === false) p.available = false;
           var h3 = card.querySelector(".dish-name-row h3");
           if (h3) h3.textContent = p.name;
@@ -2530,6 +2554,18 @@ alter table orders add column if not exists pagado boolean not null default fals
             if (!res.ok || !res.data || !res.data.length) throw new Error("save");
             delete pendingUploads[p.id];
             applySaved(payload);
+            // La fila que devuelve el servidor trae el stock REAL (con los
+            // pedidos ya descontados): el editor adopta ese número, así lo
+            // que se ve aquí es lo mismo que tiene la base y ve la carta.
+            var srvRow = res.data[0];
+            if (srvRow && srvRow.stock_quantity !== undefined){
+              var srvStock = stockOf(srvRow);
+              p.stock_quantity = srvRow.stock_quantity;
+              stockBase = srvStock;
+              var si = field(card, "stock");
+              if (si && document.activeElement !== si) si.value = srvStock === null ? "" : String(srvStock);
+              refreshStockBadges();
+            }
             renderCarta();
             saveBusy = false;
             saveRetries = 0;
@@ -2708,14 +2744,21 @@ alter table orders add column if not exists pagado boolean not null default fals
             var wrap = row.querySelector("[data-dstock-badge]");
             if (wrap) wrap.innerHTML = stockBadge(p);
           }
+          // Igual que en los platos: el stock solo se manda si el dueño lo
+          // cambió en este editor (dStockBase = lo que el servidor tenía al
+          // abrirlo o tras el último guardado). Editar el precio o la foto
+          // ya no puede devolver stock que los pedidos ya descontaron.
+          var dStockBase = stockOf(p);
           function collectDrinkPayload(){
             var dStock = parseStockInput(row.querySelector("[data-dstock]").value);
             var payload = {
               price_cents: Math.max(0, Math.round(parseFloat(row.querySelector("[data-dprice]").value || "0") * 100)),
-              image_url: row.querySelector("[data-durl]").value.trim(),
-              stock_quantity: dStock
+              image_url: row.querySelector("[data-durl]").value.trim()
             };
-            if (dStock === 0) payload.available = false;
+            if (dStock !== dStockBase){
+              payload.stock_quantity = dStock;
+              if (dStock === 0) payload.available = false;
+            }
             return payload;
           }
           function doDSave(){
@@ -2737,7 +2780,16 @@ alter table orders add column if not exists pagado boolean not null default fals
               delete pendingUploads[p.id];
               p.price_cents = payload.price_cents;
               p.image_url = payload.image_url;
-              p.stock_quantity = payload.stock_quantity;
+              if (payload.stock_quantity !== undefined){ p.stock_quantity = payload.stock_quantity; dStockBase = payload.stock_quantity; }
+              // Stock real del servidor (pedidos ya descontados): se adopta
+              // en el estado, en la base del editor y en el campo visible.
+              var dSrvRow = res.data && res.data[0];
+              if (dSrvRow && dSrvRow.stock_quantity !== undefined){
+                p.stock_quantity = dSrvRow.stock_quantity;
+                dStockBase = stockOf(dSrvRow);
+                var di = row.querySelector("[data-dstock]");
+                if (di && document.activeElement !== di) di.value = dStockBase === null ? "" : String(dStockBase);
+              }
               if (payload.available === false){
                 p.available = false;
                 dAvailBox.checked = false;
@@ -2779,10 +2831,22 @@ alter table orders add column if not exists pagado boolean not null default fals
           var dAdd = row.querySelector("[data-dadd]");
           if (dAdd) dAdd.addEventListener("click", function(){
             var inp = row.querySelector("[data-dstock]");
-            var cur = parseStockInput(inp.value);
-            inp.value = String((cur === null ? 0 : cur) + 10);
-            toast("Stock: " + inp.value + ". Se está guardando solo.");
-            scheduleDSave();
+            // Se suma sobre el stock REAL del servidor, no sobre el número
+            // que el campo traía al abrir el editor.
+            dAdd.disabled = true;
+            api("products?select=stock_quantity&id=eq." + encodeURIComponent(p.id)).then(function(res){
+              var fresh = (res.ok && res.data && res.data.length) ? stockOf(res.data[0]) : dStockBase;
+              dStockBase = fresh;
+              p.stock_quantity = fresh;
+              inp.value = String((fresh === null ? 0 : fresh) + 10);
+              toast("Stock: " + inp.value + ". Se está guardando solo.");
+              scheduleDSave();
+            }).catch(function(){
+              var cur = parseStockInput(inp.value);
+              inp.value = String((cur === null ? 0 : cur) + 10);
+              toast("Stock: " + inp.value + ". Se está guardando solo.");
+              scheduleDSave();
+            }).then(function(){ dAdd.disabled = false; });
           });
           var delBtn = row.querySelector("[data-ddel]");
           delBtn.addEventListener("click", function(){
